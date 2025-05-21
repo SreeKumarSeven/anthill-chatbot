@@ -16,9 +16,8 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 print(f"OpenAI API Key available: {bool(OPENAI_API_KEY)}")
 
-# Initialize OpenAI
+# Initialize OpenAI - use a more direct approach
 openai.api_key = OPENAI_API_KEY
-openai_available = bool(OPENAI_API_KEY)
 print(f"OpenAI configuration: API version {openai.__version__}, Key set: {bool(OPENAI_API_KEY)}")
 
 # System message for Anthill IQ context
@@ -81,6 +80,12 @@ def get_db():
         print(f"DB error: {str(e)}")
         return None
 
+# For debugging
+def debug_log(message):
+    """Print a debug message with timestamp"""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[DEBUG {timestamp}] {message}")
+
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
@@ -131,8 +136,10 @@ class handler(BaseHTTPRequestHandler):
             user_id = data.get('user_id', 'anonymous')
             session_id = data.get('session_id', None)
             
+            debug_log(f"Received chat request. Message: '{message[:30]}...', User: {user_id}, Session: {session_id}")
+            
             if not OPENAI_API_KEY:
-                print(f"OpenAI API key not found in environment variables")
+                debug_log("OpenAI API key not found in environment variables")
                 self._send_json_response(500, {
                     "response": "I'm sorry, the chatbot is not available at the moment. API key missing.",
                     "source": "error",
@@ -141,12 +148,13 @@ class handler(BaseHTTPRequestHandler):
                 return
             
             # Process the chat message with OpenAI
-            print(f"Sending message to OpenAI: {message[:50]}...")
+            debug_log(f"Sending message to OpenAI: {message[:50]}...")
             try:
                 # Ensure API key is set for this request
                 openai.api_key = OPENAI_API_KEY
                 
-                # Direct API call for better compatibility with legacy API
+                # NEW: Simplified direct API request using the legacy client
+                debug_log("Using legacy OpenAI client (v0.28.1)")
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=[
@@ -157,12 +165,26 @@ class handler(BaseHTTPRequestHandler):
                     max_tokens=500
                 )
                 
-                print("OpenAI response received successfully")
+                debug_log("OpenAI response received successfully")
                 bot_response = response.choices[0].message.content
-                print(f"Bot response (first 50 chars): {bot_response[:50]}...")
+                debug_log(f"Bot response (first 50 chars): {bot_response[:50]}...")
+                
+                # Log conversation to database if available
+                db = get_db()
+                if db:
+                    db.log_conversation(message, bot_response, "openai", user_id)
+                
+                result = {
+                    "response": bot_response,
+                    "source": "openai",
+                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                }
+                
+                self._send_json_response(200, result)
+                
             except Exception as e:
-                print(f"Error from OpenAI API: {str(e)}")
                 error_detail = str(e)
+                debug_log(f"Error from OpenAI API: {error_detail}")
                 self._send_json_response(500, {
                     "response": f"I'm sorry, there was an error processing your message. Error: {error_detail}",
                     "source": "error",
@@ -170,21 +192,10 @@ class handler(BaseHTTPRequestHandler):
                 })
                 return
             
-            # Log conversation to database if available
-            db = get_db()
-            if db:
-                db.log_conversation(message, bot_response, "openai", user_id)
-            
-            result = {
-                "response": bot_response,
-                "source": "openai",
-                "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-            }
-            
-            self._send_json_response(200, result)
-            
         except Exception as e:
-            self._send_json_response(500, {"error": str(e)})
+            error_detail = str(e)
+            debug_log(f"General error in _handle_chat: {error_detail}")
+            self._send_json_response(500, {"error": error_detail})
             
     def _handle_register_user(self, data):
         try:
