@@ -127,10 +127,12 @@ Copyright © 2023 Anthill IQ. All rights reserved.
 
 This project has been optimized for deployment on Vercel's serverless platform. The optimization was necessary to overcome Vercel's 250MB deployment size limit.
 
+> **Note**: This branch is specifically optimized for Vercel deployment.
+
 Key optimizations include:
 - Minimized dependencies (only using openai, python-dotenv, requests, psycopg2-binary)
 - Simplified database connections using direct psycopg2 instead of SQLAlchemy
-- Exclusion of unnecessary files and directories via .vercelignore and vercel.json
+- Exclusion of unnecessary files and directories via .vercelignore
 - Core functionality maintained while removing unused features
 
 For detailed deployment instructions, see [VERCEL-DEPLOY-GUIDE.md](VERCEL-DEPLOY-GUIDE.md). 
