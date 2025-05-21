@@ -1,18 +1,17 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/index.py", "use": "@vercel/python" },
+    { 
+      "src": "api/index.py", 
+      "use": "@vercel/python",
+      "config": {
+        "pip": ["openai>=1.0.0", "python-dotenv", "requests", "psycopg2-binary"]
+      }
+    },
     { "src": "public/**/*", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "api/index.py" },
     { "src": "/(.*)", "dest": "public/$1" }
-  ],
-  "functions": {
-    "api/*.py": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  },
-  "installCommand": "pip install -r api/requirements.txt --no-cache-dir"
+  ]
 } 
