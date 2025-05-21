@@ -1,0 +1,30 @@
+# Directories
+backend/
+api/backend_for_vercel/
+wix-widget/
+wix-integration/
+test_distribution/
+.git/
+
+# Large binaries
+heroku-*.exe
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Frontend files not needed for API
+*.html
+*.css
+*.js
+
+# Miscellaneous
+*.md
+!README.md
+environment.yml
+app.json
+Procfile
+Aptfile
+setup.sh
+runtime.txt
+test_*.py 

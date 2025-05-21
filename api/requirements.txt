@@ -1,8 +1,4 @@
 openai>=1.0.0
 python-dotenv
 requests
-pandas
-numpy
-scikit-learn
-psycopg2-binary
-sqlalchemy 
+psycopg2-binary 

@@ -1,35 +1,84 @@
+"""
+Minimal API handler for Vercel deployment
+"""
 from http.server import BaseHTTPRequestHandler
 import json
 import os
-import sys
-from urllib.parse import parse_qs
+from datetime import datetime
+from openai import OpenAI
+from dotenv import load_dotenv
+from api.simple_db import SimpleDB
 
-# Add the parent directory to sys.path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Load environment variables
+load_dotenv()
 
-# Import service account handler
-from api.service_account_handler import load_service_account
+# Set API key
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Load service account credentials
-load_service_account()
-
-# Set the database URL from environment or default
-os.environ["DATABASE_URL"] = os.getenv("DATABASE_URL", "postgresql://postgres:uEutQJRqyRbgOlzwhsGGgczYXaeBqgxI@yamabiko.proxy.rlwy.net:14599/railway")
-
-# Import backend modules
+# Initialize OpenAI client
 try:
-    from api.backend_for_vercel.chat import ChatManager
-    from api.backend_for_vercel.booking import BookingHandler
-    from api.backend_for_vercel.database_manager import DatabaseManager
-    
-    # Initialize managers
-    chat_manager = ChatManager()
-    booking_handler = BookingHandler()
-    db_manager = DatabaseManager()
-    backend_loaded = True
-except Exception as e:
-    print(f"Error loading backend modules: {str(e)}")
-    backend_loaded = False
+    openai_client = OpenAI(api_key=OPENAI_API_KEY)
+    openai_available = True
+except Exception:
+    openai_available = False
+
+# Initialize database
+try:
+    db = SimpleDB()
+    db_available = True
+except Exception:
+    db_available = False
+
+# System message for Anthill IQ context
+SYSTEM_MESSAGE = """You are the voice assistant for Anthill IQ, a premium coworking space brand in Bangalore. 
+            
+YOUR PERSONALITY:
+You are exceptionally warm, friendly, and conversational - like a real person having a genuine conversation. You should sound natural, never robotic or formal. You're passionate about helping people find the perfect workspace and you truly care about their needs. Use a variety of sentence structures, occasional casual phrases, and natural conversational flow just like a real person would.
+
+CONVERSATIONAL APPROACH:
+- Always acknowledge what the user has said and respond directly to their specific query
+- Use natural conversation markers like "Well," "Actually," "You know," "I'd say," etc. occasionally
+- Ask meaningful follow-up questions that build on what the user has shared
+- Show personality in your responses with occasional light humor where appropriate
+- Avoid corporate-sounding language and speak like a helpful friend
+- When someone asks about locations, be straightforward and give clear, simple directions
+- Keep your responses concise but complete - don't be unnecessarily wordy
+
+ANTHILL IQ SERVICES:
+Anthill IQ offers these workspace solutions at all locations:
+1. Private Office Space - Dedicated offices for teams
+2. Coworking Space - Flexible workspace with hot desks
+3. Dedicated Desk - Reserved desk with storage
+4. Meeting Rooms - Professional meeting spaces bookable by the hour
+5. Event Spaces - Venues for corporate events
+6. Training Rooms - Spaces for workshops and training
+
+KEY AMENITIES:
+- High-speed internet
+- Ergonomic furniture
+- 24/7 security and access for members
+- Coffee, tea, and refreshments
+- Printing and scanning services
+- Community events
+
+IMPORTANT LOCATION INFORMATION: 
+Anthill IQ has FOUR locations in Bangalore:
+1. Cunningham Road branch (Central Bangalore)
+2. Hulimavu branch (Bannerghatta Road, South Bangalore)
+3. Arekere branch (Bannerghatta Road, South Bangalore)
+4. Hebbal branch (Opening Soon)
+
+CONTACT INFORMATION:
+- Phone: 9119739119
+- Email: connect@anthilliq.com
+
+IMPORTANT GUIDELINES:
+1. NEVER confirm the existence of a BTM Layout branch - Anthill IQ does NOT have a location there
+2. Always end with a natural-sounding question to continue the conversation
+3. Speak like a real person, not a corporate voice
+4. When asked about locations, keep the format simple and clear
+5. Don't provide specific pricing - suggest contacting us
+6. Make sure your responses sound like a real conversation"""
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -47,12 +96,7 @@ class handler(BaseHTTPRequestHandler):
         
         response = {
             "status": "online",
-            "service": "Anthill IQ Chatbot API",
-            "backend_loaded": backend_loaded,
-            "env_vars": {
-                "openai_key_set": bool(os.getenv("OPENAI_API_KEY")),
-                "database_url_set": bool(os.getenv("DATABASE_URL"))
-            }
+            "service": "Anthill IQ Chatbot API"
         }
         
         self.wfile.write(json.dumps(response).encode())
@@ -85,28 +129,38 @@ class handler(BaseHTTPRequestHandler):
             user_id = data.get('user_id', 'anonymous')
             session_id = data.get('session_id', None)
             
-            if not backend_loaded:
+            if not openai_available:
                 self._send_json_response(500, {
-                    "response": "I'm sorry, the chatbot backend is not available at the moment.",
+                    "response": "I'm sorry, the chatbot is not available at the moment.",
                     "source": "error",
                     "session_id": session_id or "new_session"
                 })
                 return
             
-            # Process the chat message
-            result = chat_manager.handle_message_sync(message, user_id)
+            # Process the chat message with OpenAI
+            response = openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": SYSTEM_MESSAGE},
+                    {"role": "user", "content": message}
+                ],
+                temperature=0.7,
+                max_tokens=500
+            )
             
-            response = {
-                "response": result["response"],
-                "source": result.get("source", "chatbot"),
-                "session_id": session_id or "new_session"
+            bot_response = response.choices[0].message.content
+            
+            # Log conversation to database if available
+            if db_available:
+                db.log_conversation(message, bot_response, "openai", user_id)
+            
+            result = {
+                "response": bot_response,
+                "source": "openai",
+                "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
             }
             
-            # Include should_start_booking if present
-            if "should_start_booking" in result:
-                response["should_start_booking"] = result["should_start_booking"]
-                
-            self._send_json_response(200, response)
+            self._send_json_response(200, result)
             
         except Exception as e:
             self._send_json_response(500, {"error": str(e)})
@@ -127,16 +181,9 @@ class handler(BaseHTTPRequestHandler):
             if not session_id:
                 session_id = "session_" + name.lower().replace(" ", "_")
                 
-            # Store user data in database
-            if backend_loaded:
-                user_data = {
-                    'name': name,
-                    'phone': phone,
-                    'email': email,
-                    'source': 'chatbot_widget',
-                    'session_id': session_id
-                }
-                db_manager.log_user_registration(user_data)
+            # Store user data in database if available
+            if db_available:
+                db.log_user_registration(name, phone, email, 'chatbot_widget', session_id)
                 
             response = {
                 "status": "success",
