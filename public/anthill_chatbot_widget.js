@@ -7,6 +7,9 @@
         WIDGET_TITLE: 'Anthill IQ Assistant'
     };
 
+    console.log('Anthill IQ Chatbot Widget initializing...');
+    console.log('Using API URL:', CONFIG.API_URL);
+
     // Create widget container
     const container = document.createElement('div');
     container.id = 'anthill-chat-widget';
@@ -231,6 +234,8 @@
         // Clear input
         document.getElementById('chat-input').value = '';
         
+        console.log('Sending message to API:', message);
+        
         // Send to backend
         fetch(`${CONFIG.API_URL}/chat`, {
             method: 'POST',
@@ -243,8 +248,13 @@
                 session_id: state.sessionId
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('API response status:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('API response data:', data);
+            
             // Add bot response to chat
             addMessageToChat(data.response, 'bot');
             
@@ -259,7 +269,7 @@
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error from API:', error);
             addMessageToChat("I'm sorry, I'm having trouble connecting. Please try again later.", 'bot');
         });
     }
