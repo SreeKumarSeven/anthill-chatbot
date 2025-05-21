@@ -14,12 +14,15 @@ load_dotenv()
 
 # Set API key
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+print(f"OpenAI API Key available: {bool(OPENAI_API_KEY)}")
 
 # Initialize OpenAI client
 try:
     openai_client = OpenAI(api_key=OPENAI_API_KEY)
     openai_available = True
-except Exception:
+    print("OpenAI client initialized successfully")
+except Exception as e:
+    print(f"Error initializing OpenAI client: {str(e)}")
     openai_available = False
 
 # Initialize database
@@ -130,6 +133,7 @@ class handler(BaseHTTPRequestHandler):
             session_id = data.get('session_id', None)
             
             if not openai_available:
+                print(f"OpenAI not available. API key set: {bool(OPENAI_API_KEY)}")
                 self._send_json_response(500, {
                     "response": "I'm sorry, the chatbot is not available at the moment.",
                     "source": "error",
@@ -138,17 +142,27 @@ class handler(BaseHTTPRequestHandler):
                 return
             
             # Process the chat message with OpenAI
-            response = openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": SYSTEM_MESSAGE},
-                    {"role": "user", "content": message}
-                ],
-                temperature=0.7,
-                max_tokens=500
-            )
-            
-            bot_response = response.choices[0].message.content
+            print(f"Sending message to OpenAI: {message[:50]}...")
+            try:
+                response = openai_client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": SYSTEM_MESSAGE},
+                        {"role": "user", "content": message}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500
+                )
+                print("OpenAI response received successfully")
+                bot_response = response.choices[0].message.content
+            except Exception as e:
+                print(f"Error from OpenAI API: {str(e)}")
+                self._send_json_response(500, {
+                    "response": "I'm sorry, there was an error processing your message.",
+                    "source": "error",
+                    "session_id": session_id or "new_session"
+                })
+                return
             
             # Log conversation to database if available
             if db_available:
