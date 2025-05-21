@@ -25,7 +25,23 @@
     <h1>Anthill IQ Chatbot API</h1>
     <p>Status: <span class="status">Online</span></p>
     <p>This is the API endpoint for the Anthill IQ chatbot. The API is running and ready to accept requests.</p>
-    <p>To interact with the chatbot, use the chat widget on the Anthill IQ website.</p>
+    <p>To interact with the chatbot, use the widget in the bottom right corner of this page, or follow these integration instructions for your own website:</p>
+    
+    <h3>Integration Code for Wix:</h3>
+    <pre style="background: #f5f5f5; padding: 15px; overflow: auto; border-radius: 4px;">
+&lt;div id="anthill-chatbot-container"&gt;&lt;/div&gt;
+&lt;script&gt;
+    (function() {
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.async = true;
+        script.src = 'https://anthill-chatbot.vercel.app/anthill_chatbot_widget.js';
+        
+        var entry = document.getElementsByTagName('script')[0];
+        entry.parentNode.insertBefore(script, entry);
+    })();
+&lt;/script&gt;
+    </pre>
     
     <script>
         // Simple status check
@@ -43,5 +59,8 @@
                 document.querySelector('.status').textContent = 'Offline';
             });
     </script>
+    
+    <!-- Embed the chatbot widget directly on this page -->
+    <script src="/anthill_chatbot_widget.js"></script>
 </body>
 </html> 
