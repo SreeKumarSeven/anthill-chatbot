@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anthill IQ Chatbot</title>
+    <link rel="stylesheet" href="widget.css">
+</head>
+<body>
+    <div id="anthill-chat-widget" class="chat-widget">
+        <!-- Chat toggle button -->
+        <button id="chat-toggle" class="chat-toggle">
+            <span class="chat-toggle-icon">💬</span>
+        </button>
+
+        <!-- Chat window -->
+        <div id="chat-window" class="chat-window hidden">
+            <!-- Header -->
+            <div class="chat-header">
+                <h3>Anthill IQ Assistant</h3>
+                <button id="close-chat" class="close-button">×</button>
+            </div>
+
+            <!-- Messages container -->
+            <div id="chat-messages" class="chat-messages"></div>
+
+            <!-- Booking form (initially hidden) -->
+            <div id="booking-form" class="booking-form hidden">
+                <h4>Schedule a Consultation</h4>
+                <form id="consultation-form">
+                    <input type="text" id="name" placeholder="Your Name" required>
+                    <input type="email" id="email" placeholder="Your Email" required>
+                    <input type="tel" id="phone" placeholder="Phone Number" required>
+                    <input type="datetime-local" id="datetime" required>
+                    <button type="submit">Schedule</button>
+                    <button type="button" id="cancel-booking">Cancel</button>
+                </form>
+            </div>
+
+            <!-- Input area -->
+            <div class="chat-input-area">
+                <textarea id="chat-input" placeholder="Type your message..." rows="1"></textarea>
+                <button id="send-message">Send</button>
+            </div>
+        </div>
+    </div>
+    <script src="widget.js"></script>
+</body>
+</html> 

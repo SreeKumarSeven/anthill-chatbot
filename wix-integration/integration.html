@@ -1,0 +1,281 @@
+<!-- 
+  Anthill IQ Chatbot - Wix Integration HTML
+  
+  Instructions:
+  1. In your Wix editor, add a new "Custom Element" or "Embed HTML" component
+  2. Paste this entire code block into the HTML panel
+  3. Update the API_BASE_URL variable in the script to point to your backend
+  4. Publish your Wix site
+-->
+
+<div id="anthill-chatbot-container"></div>
+
+<script>
+  // Configuration - CHANGE THIS URL TO YOUR ACTUAL BACKEND API URL
+  const API_BASE_URL = 'https://your-backend-api-url.com';
+  
+  // Generate a unique user ID or reuse existing one
+  function generateUserId() {
+    let userId = localStorage.getItem('anthillChatUserId');
+    
+    if (!userId) {
+      userId = 'visitor_' + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('anthillChatUserId', userId);
+    }
+    
+    return userId;
+  }
+  
+  // Get or generate a session ID
+  function getSessionId() {
+    let sessionId = localStorage.getItem('anthillChatSessionId');
+    return sessionId || null;
+  }
+  
+  // Save session ID to localStorage
+  function saveSessionId(sessionId) {
+    if (sessionId) {
+      localStorage.setItem('anthillChatSessionId', sessionId);
+    }
+  }
+  
+  // User and session IDs
+  const USER_ID = generateUserId();
+  let SESSION_ID = getSessionId();
+  
+  // Initialize the chatbot when the page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeChatbot();
+  });
+  
+  function initializeChatbot() {
+    // Create and set up the chatbot UI
+    const container = document.getElementById('anthill-chatbot-container');
+    
+    // Create the chat window structure
+    container.innerHTML = `
+      <div class="anthill-chatbot">
+        <div class="anthill-chat-window" style="display: none;">
+          <div class="anthill-chat-header">
+            <h3>Anthill IQ Assistant</h3>
+          </div>
+          <div class="anthill-chat-messages">
+            <div class="anthill-message anthill-bot-message">
+              Hello! I'm the Anthill IQ assistant. How can I help you today?
+            </div>
+          </div>
+          <div class="anthill-chat-input">
+            <input type="text" placeholder="Type your message...">
+            <button>Send</button>
+          </div>
+        </div>
+        <div class="anthill-chat-toggle">
+          <span>Chat with us</span>
+        </div>
+      </div>
+    `;
+    
+    // Add event listeners
+    const chatToggle = container.querySelector('.anthill-chat-toggle');
+    const chatWindow = container.querySelector('.anthill-chat-window');
+    const chatInput = container.querySelector('.anthill-chat-input input');
+    const sendButton = container.querySelector('.anthill-chat-input button');
+    
+    chatToggle.addEventListener('click', function() {
+      const isVisible = chatWindow.style.display !== 'none';
+      
+      if (isVisible) {
+        chatWindow.style.display = 'none';
+        chatToggle.innerHTML = '<span>Chat with us</span>';
+      } else {
+        chatWindow.style.display = 'flex';
+        chatToggle.innerHTML = '<span>Close chat</span>';
+        chatInput.focus();
+      }
+    });
+    
+    chatInput.addEventListener('keypress', function(event) {
+      if (event.key === 'Enter') {
+        sendChatMessage();
+      }
+    });
+    
+    sendButton.addEventListener('click', sendChatMessage);
+    
+    // Function to send messages
+    function sendChatMessage() {
+      const messageText = chatInput.value.trim();
+      
+      if (!messageText) return;
+      
+      // Add the user message to the chat
+      addMessage(messageText, 'user');
+      
+      // Clear the input
+      chatInput.value = '';
+      
+      // Show loading indicator
+      const loadingMessage = addMessage('...', 'bot');
+      
+      // Send the message to the API
+      fetch(`${API_BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: messageText,
+          user_id: USER_ID,
+          session_id: SESSION_ID
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Remove loading indicator
+        const chatMessages = container.querySelector('.anthill-chat-messages');
+        chatMessages.removeChild(loadingMessage);
+        
+        // Add the bot response to the chat
+        addMessage(data.response, 'bot');
+        
+        // Save the session ID if it's the first message
+        if (!SESSION_ID && data.session_id) {
+          SESSION_ID = data.session_id;
+          saveSessionId(SESSION_ID);
+        }
+      })
+      .catch(error => {
+        // Remove loading indicator
+        const chatMessages = container.querySelector('.anthill-chat-messages');
+        chatMessages.removeChild(loadingMessage);
+        
+        // Add error message
+        addMessage('Sorry, there was an error. Please try again later.', 'bot');
+        console.error('Error:', error);
+      });
+    }
+    
+    // Function to add a message to the chat
+    function addMessage(text, sender) {
+      const chatMessages = container.querySelector('.anthill-chat-messages');
+      
+      const messageElement = document.createElement('div');
+      messageElement.className = `anthill-message anthill-${sender}-message`;
+      messageElement.textContent = text;
+      
+      chatMessages.appendChild(messageElement);
+      
+      // Scroll to the bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      
+      return messageElement;
+    }
+  }
+</script>
+
+<style>
+  /* Chatbot styling */
+  .anthill-chatbot {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    font-family: Arial, sans-serif;
+  }
+  
+  .anthill-chat-toggle {
+    background-color: #4A90E2;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s;
+  }
+  
+  .anthill-chat-toggle:hover {
+    background-color: #3A80D2;
+  }
+  
+  .anthill-chat-window {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    width: 320px;
+    height: 400px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .anthill-chat-header {
+    background-color: #4A90E2;
+    color: white;
+    padding: 10px 15px;
+  }
+  
+  .anthill-chat-header h3 {
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+  }
+  
+  .anthill-chat-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+  }
+  
+  .anthill-message {
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    border-radius: 20px;
+    max-width: 80%;
+    word-wrap: break-word;
+  }
+  
+  .anthill-bot-message {
+    background-color: #F1F0F0;
+    align-self: flex-start;
+    margin-right: auto;
+  }
+  
+  .anthill-user-message {
+    background-color: #4A90E2;
+    color: white;
+    align-self: flex-end;
+    margin-left: auto;
+  }
+  
+  .anthill-chat-input {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #E0E0E0;
+  }
+  
+  .anthill-chat-input input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #E0E0E0;
+    border-radius: 20px;
+    outline: none;
+  }
+  
+  .anthill-chat-input button {
+    background-color: #4A90E2;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 15px;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .anthill-chat-input button:hover {
+    background-color: #3A80D2;
+  }
+</style> 

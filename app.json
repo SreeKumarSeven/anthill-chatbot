@@ -1,0 +1,26 @@
+{
+  "name": "Anthill IQ Chatbot",
+  "description": "AI chatbot powered by OpenAI",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "scripts": {
+    "postdeploy": "bash setup.sh"
+  },
+  "env": {
+    "OPENAI_API_KEY": {
+      "description": "Your OpenAI API key"
+    },
+    "GOOGLE_SHEET_ID": {
+      "description": "ID of your Google Sheet for conversation logging"
+    },
+    "GOOGLE_SERVICE_ACCOUNT": {
+      "description": "Google service account JSON as a string"
+    },
+    "FINE_TUNED_MODEL_ID": {
+      "description": "Fine-tuned model ID from OpenAI"
+    }
+  }
+} 

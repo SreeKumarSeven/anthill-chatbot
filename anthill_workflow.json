@@ -1,0 +1,270 @@
+{
+  "name": "Anthill IQ Chatbot Workflow",
+  "description": "Automates the Anthill IQ chatbot interaction process including message handling, response generation, and booking management",
+  "blueprint": {
+    "modules": [
+      {
+        "id": "webhook-trigger",
+        "name": "Webhook",
+        "type": "trigger",
+        "connection": {
+          "type": "webhook"
+        },
+        "metadata": {
+          "instant": true,
+          "expectsBinary": false
+        },
+        "mapping": {}
+      },
+      {
+        "id": "router",
+        "name": "Router",
+        "type": "router",
+        "mapping": {
+          "routes": [
+            {
+              "id": "route-chat",
+              "label": "Chat Message",
+              "condition": "{{webhook-trigger.data.path}} == '/api/chat'"
+            },
+            {
+              "id": "route-booking",
+              "label": "Booking Request",
+              "condition": "{{webhook-trigger.data.path}} == '/api/booking'"
+            }
+          ]
+        }
+      },
+      {
+        "id": "extract-message-data",
+        "name": "Parse JSON",
+        "type": "action",
+        "connection": {
+          "type": "json-parser"
+        },
+        "mapping": {
+          "json": "{{webhook-trigger.data.body}}",
+          "route": "route-chat"
+        }
+      },
+      {
+        "id": "check-booking-keywords",
+        "name": "Check Booking Keywords",
+        "type": "filter",
+        "mapping": {
+          "condition": "{{contains(lower(extract-message-data.message), 'book') || contains(lower(extract-message-data.message), 'appointment') || contains(lower(extract-message-data.message), 'consultation') || contains(lower(extract-message-data.message), 'schedule') || contains(lower(extract-message-data.message), 'reserve') || contains(lower(extract-message-data.message), 'meeting') || contains(lower(extract-message-data.message), 'day pass')}}"
+        }
+      },
+      {
+        "id": "generate-booking-response",
+        "name": "Create Booking Response",
+        "type": "action",
+        "mapping": {
+          "response": "I can help you book a service at Anthill IQ! Please let me know what type of service you're interested in.",
+          "source": "booking",
+          "user_id": "{{extract-message-data.user_id}}",
+          "session_id": "{{extract-message-data.session_id}}"
+        }
+      },
+      {
+        "id": "generate-chat-response",
+        "name": "Generate Chat Response",
+        "type": "action",
+        "connection": {
+          "type": "openai",
+          "credentials": {
+            "api_key": "{{env.OPENAI_API_KEY}}"
+          }
+        },
+        "mapping": {
+          "model": "{{env.FINE_TUNED_MODEL_ID}}",
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are the official Anthill IQ chatbot assistant. Your primary role is to provide accurate information about Anthill IQ's services and handle booking requests. Anthill IQ is a coworking space located at 1st Floor, Thor Signia, 1st Main Road, 1st Stage, BTM Layout, Bangalore - 560029. Operating hours: Monday to Friday, 9:00 AM to 6:00 PM. Website: https://anthilliq.com. Services offered include Day Pass (₹999/day), Dedicated Desk (₹15,000/month), Private Cabin (₹25,000/month), Meeting Room (₹1,000/hour), and Virtual Office (₹5,000/month). Amenities include high-speed internet, meeting rooms, cafeteria, printing services, 24/7 access, security, housekeeping, and parking."
+            },
+            {
+              "role": "user",
+              "content": "{{extract-message-data.message}}"
+            }
+          ],
+          "temperature": 0.7,
+          "max_tokens": 300
+        }
+      },
+      {
+        "id": "format-chat-response",
+        "name": "Format Chat Response",
+        "type": "action",
+        "mapping": {
+          "response": "{{generate-chat-response.choices[0].message.content}}",
+          "source": "fine-tuned-model",
+          "user_id": "{{extract-message-data.user_id}}",
+          "session_id": "{{extract-message-data.session_id}}"
+        }
+      },
+      {
+        "id": "log-conversation",
+        "name": "Log to Google Sheets",
+        "type": "action",
+        "connection": {
+          "type": "google-sheets",
+          "credentials": {
+            "type": "service_account",
+            "client_email": "{{env.GOOGLE_SERVICE_ACCOUNT}}",
+            "private_key": "{{env.GOOGLE_PRIVATE_KEY}}"
+          }
+        },
+        "mapping": {
+          "spreadsheetId": "{{env.GOOGLE_SHEET_ID}}",
+          "worksheet": "Conversations",
+          "values": [
+            "{{formatDate(now(), 'YYYY-MM-DD HH:mm:ss')}}",
+            "{{extract-message-data.user_id}}",
+            "{{extract-message-data.message}}",
+            "{{if(exists(generate-booking-response.response), generate-booking-response.response, format-chat-response.response)}}",
+            "{{if(exists(generate-booking-response.source), generate-booking-response.source, format-chat-response.source)}}"
+          ]
+        }
+      },
+      {
+        "id": "webhook-response",
+        "name": "Webhook Response",
+        "type": "responder",
+        "mapping": {
+          "response": "{{if(exists(generate-booking-response.response), generate-booking-response, format-chat-response)}}",
+          "statusCode": 200,
+          "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+          }
+        }
+      },
+      {
+        "id": "extract-booking-data",
+        "name": "Parse Booking JSON",
+        "type": "action",
+        "connection": {
+          "type": "json-parser"
+        },
+        "mapping": {
+          "json": "{{webhook-trigger.data.body}}",
+          "route": "route-booking"
+        }
+      },
+      {
+        "id": "log-booking",
+        "name": "Log Booking to Google Sheets",
+        "type": "action",
+        "connection": {
+          "type": "google-sheets",
+          "credentials": {
+            "type": "service_account",
+            "client_email": "{{env.GOOGLE_SERVICE_ACCOUNT}}",
+            "private_key": "{{env.GOOGLE_PRIVATE_KEY}}"
+          }
+        },
+        "mapping": {
+          "spreadsheetId": "{{env.GOOGLE_SHEET_ID}}",
+          "worksheet": "Bookings",
+          "values": [
+            "{{formatDate(now(), 'YYYY-MM-DD HH:mm:ss')}}",
+            "{{extract-booking-data.name}}",
+            "{{extract-booking-data.email}}",
+            "{{extract-booking-data.phone}}",
+            "{{extract-booking-data.service}}",
+            "{{extract-booking-data.message}}"
+          ]
+        }
+      },
+      {
+        "id": "send-notification-email",
+        "name": "Send Email Notification",
+        "type": "action",
+        "connection": {
+          "type": "email"
+        },
+        "mapping": {
+          "to": ["admin@anthilliq.com"],
+          "subject": "New Booking Request - {{extract-booking-data.service}}",
+          "text": "A new booking request has been received:\n\nName: {{extract-booking-data.name}}\nEmail: {{extract-booking-data.email}}\nPhone: {{extract-booking-data.phone}}\nService: {{extract-booking-data.service}}\nMessage: {{extract-booking-data.message}}\n\nPlease follow up with the customer soon."
+        }
+      },
+      {
+        "id": "booking-response",
+        "name": "Booking Response",
+        "type": "responder",
+        "mapping": {
+          "response": {
+            "success": true,
+            "message": "Booking request for {{extract-booking-data.service}} has been received and will be processed shortly."
+          },
+          "statusCode": 200,
+          "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+          }
+        }
+      }
+    ],
+    "connections": [
+      {
+        "from": "webhook-trigger",
+        "to": "router"
+      },
+      {
+        "from": "router",
+        "to": "extract-message-data",
+        "route": "route-chat"
+      },
+      {
+        "from": "extract-message-data",
+        "to": "check-booking-keywords"
+      },
+      {
+        "from": "check-booking-keywords",
+        "to": "generate-booking-response",
+        "filter": true
+      },
+      {
+        "from": "check-booking-keywords",
+        "to": "generate-chat-response",
+        "filter": false
+      },
+      {
+        "from": "generate-chat-response",
+        "to": "format-chat-response"
+      },
+      {
+        "from": "generate-booking-response",
+        "to": "log-conversation"
+      },
+      {
+        "from": "format-chat-response",
+        "to": "log-conversation"
+      },
+      {
+        "from": "log-conversation",
+        "to": "webhook-response"
+      },
+      {
+        "from": "router",
+        "to": "extract-booking-data",
+        "route": "route-booking"
+      },
+      {
+        "from": "extract-booking-data",
+        "to": "log-booking"
+      },
+      {
+        "from": "log-booking",
+        "to": "send-notification-email"
+      },
+      {
+        "from": "send-notification-email",
+        "to": "booking-response"
+      }
+    ]
+  },
+  "version": "1.0.0"
+} 
