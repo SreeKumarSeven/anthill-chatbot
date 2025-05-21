@@ -5,9 +5,9 @@ from http.server import BaseHTTPRequestHandler
 import json
 import os
 from datetime import datetime
-from openai import OpenAI
 from dotenv import load_dotenv
-from api.simple_db import SimpleDB
+import openai
+import requests
 
 # Load environment variables
 load_dotenv()
@@ -16,31 +16,9 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 print(f"OpenAI API Key available: {bool(OPENAI_API_KEY)}")
 
-# Initialize OpenAI client
-try:
-    # For backward compatibility with older API keys
-    if OPENAI_API_KEY and OPENAI_API_KEY.startswith('sk-'):
-        openai_client = OpenAI(api_key=OPENAI_API_KEY)
-        print("OpenAI client initialized with SK key")
-    else:
-        # Try legacy format or fail
-        import openai as legacy_openai
-        legacy_openai.api_key = OPENAI_API_KEY
-        openai_client = legacy_openai
-        print("OpenAI client initialized with legacy format")
-    
-    openai_available = True
-    print("OpenAI client initialized successfully")
-except Exception as e:
-    print(f"Error initializing OpenAI client: {str(e)}")
-    openai_available = False
-
-# Initialize database
-try:
-    db = SimpleDB()
-    db_available = True
-except Exception:
-    db_available = False
+# Initialize OpenAI
+openai.api_key = OPENAI_API_KEY
+openai_available = bool(OPENAI_API_KEY)
 
 # System message for Anthill IQ context
 SYSTEM_MESSAGE = """You are the voice assistant for Anthill IQ, a premium coworking space brand in Bangalore. 
@@ -93,6 +71,15 @@ IMPORTANT GUIDELINES:
 5. Don't provide specific pricing - suggest contacting us
 6. Make sure your responses sound like a real conversation"""
 
+# Initialize database connection (importing inside the function to avoid startup errors)
+def get_db():
+    try:
+        from api.simple_db import SimpleDB
+        return SimpleDB()
+    except Exception as e:
+        print(f"DB error: {str(e)}")
+        return None
+
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
@@ -109,7 +96,8 @@ class handler(BaseHTTPRequestHandler):
         
         response = {
             "status": "online",
-            "service": "Anthill IQ Chatbot API"
+            "service": "Anthill IQ Chatbot API",
+            "openai_key": bool(OPENAI_API_KEY)
         }
         
         self.wfile.write(json.dumps(response).encode())
@@ -154,33 +142,19 @@ class handler(BaseHTTPRequestHandler):
             # Process the chat message with OpenAI
             print(f"Sending message to OpenAI: {message[:50]}...")
             try:
-                # Check which OpenAI client version we're using
-                if hasattr(openai_client, 'chat') and hasattr(openai_client.chat, 'completions'):
-                    # New OpenAI client
-                    response = openai_client.chat.completions.create(
-                        model="gpt-3.5-turbo",
-                        messages=[
-                            {"role": "system", "content": SYSTEM_MESSAGE},
-                            {"role": "user", "content": message}
-                        ],
-                        temperature=0.7,
-                        max_tokens=500
-                    )
-                    bot_response = response.choices[0].message.content
-                else:
-                    # Legacy OpenAI client
-                    response = openai_client.ChatCompletion.create(
-                        model="gpt-3.5-turbo",
-                        messages=[
-                            {"role": "system", "content": SYSTEM_MESSAGE},
-                            {"role": "user", "content": message}
-                        ],
-                        temperature=0.7,
-                        max_tokens=500
-                    )
-                    bot_response = response['choices'][0]['message']['content']
+                # Direct API call for better compatibility
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": SYSTEM_MESSAGE},
+                        {"role": "user", "content": message}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500
+                )
                 
                 print("OpenAI response received successfully")
+                bot_response = response.choices[0].message.content
             except Exception as e:
                 print(f"Error from OpenAI API: {str(e)}")
                 self._send_json_response(500, {
@@ -191,7 +165,8 @@ class handler(BaseHTTPRequestHandler):
                 return
             
             # Log conversation to database if available
-            if db_available:
+            db = get_db()
+            if db:
                 db.log_conversation(message, bot_response, "openai", user_id)
             
             result = {
@@ -222,7 +197,8 @@ class handler(BaseHTTPRequestHandler):
                 session_id = "session_" + name.lower().replace(" ", "_")
                 
             # Store user data in database if available
-            if db_available:
+            db = get_db()
+            if db:
                 db.log_user_registration(name, phone, email, 'chatbot_widget', session_id)
                 
             response = {
