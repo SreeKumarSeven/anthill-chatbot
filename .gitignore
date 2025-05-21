@@ -1,5 +1,7 @@
 # Credentials and sensitive information
 service-account.json
+service-account-for-vercel.txt
+minified-service-account.txt
 *.pem
 *.key
 *.env
