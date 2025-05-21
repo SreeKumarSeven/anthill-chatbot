@@ -7,15 +7,26 @@ from urllib.parse import parse_qs
 # Add the parent directory to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import backend modules
-from backend.chat import ChatManager
-from backend.booking import BookingHandler
-from backend.sheets_manager import GoogleSheetsManager
+# Import service account handler
+from api.service_account_handler import load_service_account
 
-# Initialize managers
-chat_manager = ChatManager()
-booking_handler = BookingHandler()
-sheets_manager = GoogleSheetsManager()
+# Load service account credentials
+load_service_account()
+
+# Import backend modules
+try:
+    from backend.chat import ChatManager
+    from backend.booking import BookingHandler
+    from backend.sheets_manager import GoogleSheetsManager
+    
+    # Initialize managers
+    chat_manager = ChatManager()
+    booking_handler = BookingHandler()
+    sheets_manager = GoogleSheetsManager()
+    backend_loaded = True
+except Exception as e:
+    print(f"Error loading backend modules: {str(e)}")
+    backend_loaded = False
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -33,7 +44,13 @@ class handler(BaseHTTPRequestHandler):
         
         response = {
             "status": "online",
-            "service": "Anthill IQ Chatbot API"
+            "service": "Anthill IQ Chatbot API",
+            "backend_loaded": backend_loaded,
+            "env_vars": {
+                "openai_key_set": bool(os.getenv("OPENAI_API_KEY")),
+                "google_sheet_id_set": bool(os.getenv("GOOGLE_SHEET_ID")),
+                "google_service_account_set": bool(os.getenv("GOOGLE_SERVICE_ACCOUNT"))
+            }
         }
         
         self.wfile.write(json.dumps(response).encode())
@@ -66,7 +83,15 @@ class handler(BaseHTTPRequestHandler):
             user_id = data.get('user_id', 'anonymous')
             session_id = data.get('session_id', None)
             
-            # Process the chat message asynchronously
+            if not backend_loaded:
+                self._send_json_response(500, {
+                    "response": "I'm sorry, the chatbot backend is not available at the moment.",
+                    "source": "error",
+                    "session_id": session_id or "new_session"
+                })
+                return
+            
+            # Process the chat message
             result = chat_manager.handle_message_sync(message, user_id)
             
             response = {
