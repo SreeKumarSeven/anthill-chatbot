@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Dict, Optional
 from dotenv import load_dotenv
 from api.backend_for_vercel.fine_tuning import FineTuningManager
-from api.backend_for_vercel.sheets_manager import GoogleSheetsManager
+from api.backend_for_vercel.database_manager import DatabaseManager
 import re
 import logging
 
@@ -25,14 +25,14 @@ class ChatManager:
             # Fallback to basic initialization without extra parameters
             self.client = OpenAI(api_key=openai_api_key)
         
-        self.sheets_manager = GoogleSheetsManager()
+        self.db_manager = DatabaseManager()
         self.fine_tuning_manager = FineTuningManager()
         self.booking_states = {}  # Store booking states for different users
 
     def log_conversation(self, user_message: str, bot_response: str, source: str, user_id: Optional[str] = None):
-        """Log the conversation to Google Sheets"""
+        """Log the conversation to the database"""
         try:
-            self.sheets_manager.log_conversation(
+            self.db_manager.log_conversation(
                 user_message=user_message,
                 bot_response=bot_response,
                 source=source,

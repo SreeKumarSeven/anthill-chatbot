@@ -13,16 +13,19 @@ from api.service_account_handler import load_service_account
 # Load service account credentials
 load_service_account()
 
+# Set the database URL from environment or default
+os.environ["DATABASE_URL"] = os.getenv("DATABASE_URL", "postgresql://postgres:uEutQJRqyRbgOlzwhsGGgczYXaeBqgxI@yamabiko.proxy.rlwy.net:14599/railway")
+
 # Import backend modules
 try:
     from api.backend_for_vercel.chat import ChatManager
     from api.backend_for_vercel.booking import BookingHandler
-    from api.backend_for_vercel.sheets_manager import GoogleSheetsManager
+    from api.backend_for_vercel.database_manager import DatabaseManager
     
     # Initialize managers
     chat_manager = ChatManager()
     booking_handler = BookingHandler()
-    sheets_manager = GoogleSheetsManager()
+    db_manager = DatabaseManager()
     backend_loaded = True
 except Exception as e:
     print(f"Error loading backend modules: {str(e)}")
@@ -48,8 +51,7 @@ class handler(BaseHTTPRequestHandler):
             "backend_loaded": backend_loaded,
             "env_vars": {
                 "openai_key_set": bool(os.getenv("OPENAI_API_KEY")),
-                "google_sheet_id_set": bool(os.getenv("GOOGLE_SHEET_ID")),
-                "google_service_account_set": bool(os.getenv("GOOGLE_SERVICE_ACCOUNT"))
+                "database_url_set": bool(os.getenv("DATABASE_URL"))
             }
         }
         
@@ -113,17 +115,34 @@ class handler(BaseHTTPRequestHandler):
         try:
             name = data.get('name')
             phone = data.get('phone')
+            email = data.get('email', '')
             session_id = data.get('session_id', None)
             
             if not name or not phone:
                 self._send_json_response(400, {"error": "Name and phone are required"})
                 return
                 
+            # Generate user_id and session_id if not provided
+            user_id = "user_" + name.lower().replace(" ", "_")
+            if not session_id:
+                session_id = "session_" + name.lower().replace(" ", "_")
+                
+            # Store user data in database
+            if backend_loaded:
+                user_data = {
+                    'name': name,
+                    'phone': phone,
+                    'email': email,
+                    'source': 'chatbot_widget',
+                    'session_id': session_id
+                }
+                db_manager.log_user_registration(user_data)
+                
             response = {
                 "status": "success",
                 "message": "User registration successful",
-                "user_id": "user_" + name.lower().replace(" ", "_"),
-                "session_id": session_id or "session_" + name.lower().replace(" ", "_")
+                "user_id": user_id,
+                "session_id": session_id
             }
             
             self._send_json_response(200, response)

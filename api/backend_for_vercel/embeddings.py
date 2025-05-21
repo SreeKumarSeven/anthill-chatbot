@@ -4,7 +4,7 @@ import pandas as pd
 from typing import List, Tuple, Optional
 from openai import OpenAI
 from dotenv import load_dotenv
-from api.backend_for_vercel.sheets_manager import GoogleSheetsManager
+from api.backend_for_vercel.database_manager import DatabaseManager
 
 # Try to import faiss, but provide a fallback if it's not available
 try:
@@ -24,7 +24,7 @@ class FAQEmbeddingManager:
             raise ValueError("OPENAI_API_KEY environment variable is not set. Please check your .env file.")
             
         self.client = OpenAI(api_key=openai_api_key)
-        self.sheets_manager = GoogleSheetsManager()
+        self.db_manager = DatabaseManager()
         self.embedding_dim = 1536  # OpenAI's embedding dimension
         self.faqs = self.load_faqs()
         
@@ -47,27 +47,31 @@ class FAQEmbeddingManager:
                 self.use_embeddings = False
 
     def load_faqs(self) -> pd.DataFrame:
-        """Load FAQs from Google Sheets"""
-        # First try to get FAQs from Google Sheets
-        sheet_faqs = self.sheets_manager.get_faqs()
+        """Load FAQs from database"""
+        # First try to get FAQs from database
+        db_faqs = self.db_manager.get_faqs()
         
-        if sheet_faqs:
-            print(f"Loaded {len(sheet_faqs)} FAQs from Google Sheets")
-            return pd.DataFrame(sheet_faqs)
+        if db_faqs:
+            print(f"Loaded {len(db_faqs)} FAQs from database")
+            return pd.DataFrame(db_faqs)
         
-        # Fallback to a sample FAQ dataset if no sheets data
+        # Fallback to a sample FAQ dataset if no database data
         sample_faqs = [
             {
                 "Question": "What is Anthill IQ?",
-                "Answer": "Anthill IQ is a leading business consulting firm specializing in digital transformation and strategic business optimization."
+                "Answer": "Anthill IQ is a premium coworking space with multiple locations across Bangalore, offering private offices, dedicated desks, meeting rooms, and flexible workspace solutions for professionals and businesses."
             },
             {
                 "Question": "What services do you offer?",
-                "Answer": "We offer comprehensive services including business strategy consulting, digital transformation, process optimization, data analytics, and technology implementation."
+                "Answer": "Anthill IQ offers private office spaces, dedicated desks, coworking spaces, meeting rooms, event spaces, and virtual office services at our locations in Bangalore."
             },
             {
-                "Question": "How can I schedule a consultation?",
-                "Answer": "You can schedule a consultation using our booking form on the website. Just provide your contact details and preferred time."
+                "Question": "How can I book a workspace?",
+                "Answer": "You can book a workspace at Anthill IQ by contacting us at 9119739119 or emailing connect@anthilliq.com. Alternatively, you can use our booking form on the website or this chatbot."
+            },
+            {
+                "Question": "Where are your locations?",
+                "Answer": "Anthill IQ has four locations in Bangalore: Cunningham Road (Central Bangalore), Hulimavu (South Bangalore), Arekere (South Bangalore), and our upcoming location in Hebbal (North Bangalore)."
             }
         ]
         print("Using fallback sample FAQs")
@@ -230,7 +234,7 @@ class FAQEmbeddingManager:
             return self.keyword_match(query)
 
     def refresh_faqs(self) -> bool:
-        """Refresh FAQs from Google Sheets and rebuild index"""
+        """Refresh FAQs from database and rebuild index"""
         try:
             self.faqs = self.load_faqs()
             if self.use_embeddings:

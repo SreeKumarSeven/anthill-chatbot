@@ -2,14 +2,14 @@ import csv
 import os
 from datetime import datetime
 from typing import Dict, Optional
-from .sheets_manager import GoogleSheetsManager
+from api.backend_for_vercel.database_manager import DatabaseManager
 import re
 import pandas as pd
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 
 router = APIRouter()
-sheets_manager = GoogleSheetsManager()
+db_manager = DatabaseManager()
 
 class BookingRequest(BaseModel):
     """Model for booking requests"""
@@ -30,10 +30,10 @@ async def create_booking(booking: BookingRequest):
     """
     Create a new booking request.
     
-    This endpoint processes booking requests and logs them to Google Sheets.
+    This endpoint processes booking requests and logs them to the database.
     """
     try:
-        # Prepare booking data for Google Sheets
+        # Prepare booking data for database
         booking_data = {
             "name": booking.name,
             "email": booking.email,
@@ -48,11 +48,11 @@ async def create_booking(booking: BookingRequest):
             "source": booking.source
         }
         
-        # Log to Google Sheets only, don't use BookingHandler to prevent duplication
-        success = sheets_manager.log_booking(booking_data)
+        # Log to database, don't use BookingHandler to prevent duplication
+        success = db_manager.log_booking(booking_data)
         
         if not success:
-            print("Warning: Failed to log booking to Google Sheets")
+            print("Warning: Failed to log booking to database")
         
         # Generate a unique booking ID using timestamp
         booking_id = f"BK{datetime.now().strftime('%Y%m%d%H%M%S')}"
@@ -71,8 +71,7 @@ async def create_booking(booking: BookingRequest):
 
 class BookingManager:
     def __init__(self):
-        self.sheets_manager = GoogleSheetsManager()
-        self.ensure_leads_file()  # Keep local file as fallback
+        self.db_manager = DatabaseManager()
         self.services = [
             "Business Strategy Consulting",
             "Digital Transformation",
@@ -150,7 +149,7 @@ class BookingManager:
 
 class BookingHandler:
     def __init__(self):
-        self.sheets_manager = GoogleSheetsManager()
+        self.db_manager = DatabaseManager()
         self.services = [
             "Private Office",
             "Dedicated Desk",
