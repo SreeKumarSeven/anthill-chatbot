@@ -1,10 +1,20 @@
-# Directories
+# Directories to exclude
 backend/
-api/backend_for_vercel/
-wix-widget/
-wix-integration/
 test_distribution/
 .git/
+__pycache__/
+.vscode/
+
+# Explicitly keep essential files
+!api/index.py
+!api/simple_db.py
+!api/service_account_handler.py
+!api/requirements.txt
+!public/index.html
+
+# Remove backend_for_vercel but keep the directory structure
+api/backend_for_vercel/**/*.py
+api/backend_for_vercel/**/__pycache__/
 
 # Large binaries
 heroku-*.exe
@@ -13,18 +23,21 @@ heroku-*.exe
 *.jpeg
 *.gif
 
-# Frontend files not needed for API
-*.html
-*.css
-*.js
-
-# Miscellaneous
+# Miscellaneous files not needed for deployment
 *.md
 !README.md
+!VERCEL-DEPLOY-GUIDE.md
 environment.yml
 app.json
 Procfile
 Aptfile
 setup.sh
 runtime.txt
-test_*.py 
+test_*.py
+prepare_for_vercel.*
+
+# Frontend files except those in public/
+/anthill_*.js
+/anthill_*.css
+/*.html
+!public/**/* 
