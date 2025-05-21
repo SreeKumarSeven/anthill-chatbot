@@ -15,9 +15,9 @@ load_service_account()
 
 # Import backend modules
 try:
-    from backend.chat import ChatManager
-    from backend.booking import BookingHandler
-    from backend.sheets_manager import GoogleSheetsManager
+    from api.backend_for_vercel.chat import ChatManager
+    from api.backend_for_vercel.booking import BookingHandler
+    from api.backend_for_vercel.sheets_manager import GoogleSheetsManager
     
     # Initialize managers
     chat_manager = ChatManager()
