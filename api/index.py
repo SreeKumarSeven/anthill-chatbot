@@ -19,6 +19,7 @@ print(f"OpenAI API Key available: {bool(OPENAI_API_KEY)}")
 # Initialize OpenAI
 openai.api_key = OPENAI_API_KEY
 openai_available = bool(OPENAI_API_KEY)
+print(f"OpenAI configuration: API version {openai.__version__}, Key set: {bool(OPENAI_API_KEY)}")
 
 # System message for Anthill IQ context
 SYSTEM_MESSAGE = """You are the voice assistant for Anthill IQ, a premium coworking space brand in Bangalore. 
@@ -130,10 +131,10 @@ class handler(BaseHTTPRequestHandler):
             user_id = data.get('user_id', 'anonymous')
             session_id = data.get('session_id', None)
             
-            if not openai_available:
-                print(f"OpenAI not available. API key set: {bool(OPENAI_API_KEY)}")
+            if not OPENAI_API_KEY:
+                print(f"OpenAI API key not found in environment variables")
                 self._send_json_response(500, {
-                    "response": "I'm sorry, the chatbot is not available at the moment.",
+                    "response": "I'm sorry, the chatbot is not available at the moment. API key missing.",
                     "source": "error",
                     "session_id": session_id or "new_session"
                 })
@@ -142,7 +143,10 @@ class handler(BaseHTTPRequestHandler):
             # Process the chat message with OpenAI
             print(f"Sending message to OpenAI: {message[:50]}...")
             try:
-                # Direct API call for better compatibility
+                # Ensure API key is set for this request
+                openai.api_key = OPENAI_API_KEY
+                
+                # Direct API call for better compatibility with legacy API
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=[
@@ -155,10 +159,12 @@ class handler(BaseHTTPRequestHandler):
                 
                 print("OpenAI response received successfully")
                 bot_response = response.choices[0].message.content
+                print(f"Bot response (first 50 chars): {bot_response[:50]}...")
             except Exception as e:
                 print(f"Error from OpenAI API: {str(e)}")
+                error_detail = str(e)
                 self._send_json_response(500, {
-                    "response": "I'm sorry, there was an error processing your message.",
+                    "response": f"I'm sorry, there was an error processing your message. Error: {error_detail}",
                     "source": "error",
                     "session_id": session_id or "new_session"
                 })

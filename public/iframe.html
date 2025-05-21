@@ -149,10 +149,6 @@
                 <label for="phone">Phone</label>
                 <input type="tel" id="phone" placeholder="Enter your phone number">
             </div>
-            <div class="form-group">
-                <label for="email">Email (optional)</label>
-                <input type="email" id="email" placeholder="Enter your email">
-            </div>
             <button id="register-button" class="submit-button">Start Chat</button>
         </div>
         
@@ -231,7 +227,7 @@
         }
         
         // Register the user
-        async function registerUser(name, phone, email) {
+        async function registerUser(name, phone) {
             try {
                 const response = await fetch(`${API_URL}/register-user`, {
                     method: 'POST',
@@ -240,8 +236,7 @@
                     },
                     body: JSON.stringify({
                         name: name,
-                        phone: phone,
-                        email: email || ''
+                        phone: phone
                     }),
                 });
                 
@@ -270,14 +265,13 @@
         registerButton.addEventListener('click', () => {
             const name = document.getElementById('name').value;
             const phone = document.getElementById('phone').value;
-            const email = document.getElementById('email').value;
             
             if (!name || !phone) {
-                alert('Please provide your name and phone number.');
+                alert('Please provide both name and phone number to continue');
                 return;
             }
             
-            registerUser(name, phone, email);
+            registerUser(name, phone);
         });
         
         sendButton.addEventListener('click', () => {

@@ -2,7 +2,7 @@
 (function() {
     // Configuration - Replace with your deployed Vercel URL
     const CONFIG = {
-        API_URL: 'https://anthill-chatbot.vercel.app/api/chat',
+        API_URL: 'https://anthill-chatbot.vercel.app/api',
         REGISTRATION_API_URL: 'https://anthill-chatbot.vercel.app/api/register-user',
         WIDGET_TITLE: 'Anthill IQ Assistant'
     };
@@ -232,7 +232,7 @@
         document.getElementById('chat-input').value = '';
         
         // Send to backend
-        fetch(CONFIG.API_URL, {
+        fetch(`${CONFIG.API_URL}/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -265,6 +265,15 @@
     }
     
     function registerUser(name, phone) {
+        if (!name || !phone) {
+            showError("Please provide both name and phone number to continue");
+            return;
+        }
+        
+        // Set loading state
+        document.getElementById('register-button').textContent = "Please wait...";
+        document.getElementById('register-button').disabled = true;
+        
         fetch(CONFIG.REGISTRATION_API_URL, {
             method: 'POST',
             headers: {
@@ -272,28 +281,40 @@
             },
             body: JSON.stringify({
                 name: name,
-                phone: phone,
-                session_id: state.sessionId
+                phone: phone
             })
         })
         .then(response => response.json())
         .then(data => {
-            // Save user ID and session ID
-            state.userId = data.user_id;
-            state.sessionId = data.session_id;
-            state.isRegistered = true;
-            
-            // Hide registration form, show chat
-            document.getElementById('registration-form').classList.add('hidden');
-            document.getElementById('chat-input-area').classList.remove('hidden');
-            
-            // Add welcome message
-            addMessageToChat(`Welcome, ${name}! How can I help you today?`, 'bot');
+            if (data.status === 'success') {
+                // Store user and session ID
+                state.userId = data.user_id;
+                state.sessionId = data.session_id;
+                state.isRegistered = true;
+                
+                // Hide registration form, show chat
+                document.getElementById('registration-form').classList.add('hidden');
+                document.getElementById('chat-input-area').classList.remove('hidden');
+                
+                // Add welcome message
+                addMessageToChat(`Hello ${name}! Welcome to Anthill IQ. How can I help you today?`, 'bot');
+            } else {
+                showError("Registration failed. Please try again.");
+            }
         })
         .catch(error => {
-            console.error('Error:', error);
-            addMessageToChat("I'm sorry, I couldn't register you. Please try again.", 'bot');
+            console.error('Error registering:', error);
+            showError("There was a problem connecting to the server. Please try again.");
+        })
+        .finally(() => {
+            // Reset button state
+            document.getElementById('register-button').textContent = "Start Chat";
+            document.getElementById('register-button').disabled = false;
         });
+    }
+    
+    function showError(message) {
+        alert(message);
     }
     
     function addMessageToChat(text, sender) {
@@ -343,15 +364,11 @@
         }
     });
     
-    document.getElementById('register-button').addEventListener('click', function() {
-        const name = document.getElementById('name').value;
-        const phone = document.getElementById('phone').value;
+    document.getElementById('register-button').addEventListener('click', () => {
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
         
-        if (name && phone) {
-            registerUser(name, phone);
-        } else {
-            alert('Please fill in all fields');
-        }
+        registerUser(name, phone);
     });
     
     // Auto-resize textarea
