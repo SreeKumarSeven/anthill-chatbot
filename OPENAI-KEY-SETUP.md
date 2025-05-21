@@ -29,8 +29,8 @@ The chatbot is currently showing "I'm sorry, the chatbot is not available at the
 
 Once deployed, you can verify that the OpenAI API key is properly set up by:
 
-1. Visit https://anthill-chatbot.vercel.app/test.html
-2. Click the "Test OpenAI Connection" button
+1. Visit https://anthill-chatbot.vercel.app/test-openai.html or https://anthill-chatbot.vercel.app/test.html
+2. Click the "Test OpenAI API Key" button
 3. You should see a success message if the key is properly configured
 
 ## Troubleshooting
