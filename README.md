@@ -121,4 +121,16 @@ git push origin main
 
 ## License
 
-Copyright © 2023 Anthill IQ. All rights reserved. 
+Copyright © 2023 Anthill IQ. All rights reserved.
+
+## Vercel Deployment
+
+This project has been optimized for deployment on Vercel's serverless platform. The optimization was necessary to overcome Vercel's 250MB deployment size limit.
+
+Key optimizations include:
+- Minimized dependencies (only using openai, python-dotenv, requests, psycopg2-binary)
+- Simplified database connections using direct psycopg2 instead of SQLAlchemy
+- Exclusion of unnecessary files and directories via .vercelignore and vercel.json
+- Core functionality maintained while removing unused features
+
+For detailed deployment instructions, see [VERCEL-DEPLOY-GUIDE.md](VERCEL-DEPLOY-GUIDE.md). 
