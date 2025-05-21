@@ -98,20 +98,20 @@ class BookingManager:
             print(f"Error creating leads.csv: {str(e)}")
 
     def save_booking(self, booking_data: Dict) -> Dict:
-        """Save booking details to Google Sheets and local CSV"""
+        """Save booking details to database"""
         try:
-            # First try Google Sheets
-            sheets_success = self.sheets_manager.log_booking(booking_data)
+            # Save to database
+            db_success = self.db_manager.log_booking(booking_data)
             
-            if sheets_success:
-                print(f"Successfully saved booking to Google Sheets: {booking_data}")
+            if db_success:
+                print(f"Successfully saved booking to database: {booking_data}")
                 return {
                     "success": True,
                     "message": "Booking saved successfully",
-                    "storage": "google_sheets"
+                    "storage": "database"
                 }
             
-            # If Google Sheets fails, try local CSV
+            # Fallback to local CSV if database fails
             self.ensure_leads_file()
             
             # Prepare data for CSV
@@ -225,7 +225,7 @@ class BookingHandler:
     def handle_booking_request(self, message: str, user_id: Optional[str] = None) -> Dict:
         """
         Handle a booking request from a user.
-        Extract information and save to Google Sheets.
+        Extract information and save to database.
         """
         try:
             # Check if it's a valid booking request
@@ -243,7 +243,7 @@ class BookingHandler:
             if user_id:
                 try:
                     # Fetch recent conversations to find user info
-                    conversations = self.sheets_manager.get_recent_conversations(100)
+                    conversations = self.db_manager.get_recent_conversations(100)
                     for convo in conversations:
                         if convo.get('user_id') == user_id:
                             # Try to find name, email, phone
@@ -253,12 +253,12 @@ class BookingHandler:
                                     booking_info['name'] = name_match.group(1).strip()
                             
                             if not booking_info['email'] and '@' in convo.get('user_message', ''):
-                                email_match = re.search(email_pattern, convo.get('user_message', ''))
+                                email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', convo.get('user_message', ''))
                                 if email_match:
                                     booking_info['email'] = email_match.group(0)
                                     
                             if not booking_info['phone'] and re.search(r'\d{10}', convo.get('user_message', '')):
-                                phone_match = re.search(phone_pattern, convo.get('user_message', ''))
+                                phone_match = re.search(r'\b(?:\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b', convo.get('user_message', ''))
                                 if phone_match:
                                     booking_info['phone'] = phone_match.group(0)
                 except Exception as e:
@@ -287,8 +287,8 @@ class BookingHandler:
                 "notes": f"User ID: {user_id}" if user_id else ""
             }
             
-            # Save to Google Sheets
-            result = self.sheets_manager.log_booking(booking_data)
+            # Save to database
+            result = self.db_manager.log_booking(booking_data)
             
             if not result:
                 return {

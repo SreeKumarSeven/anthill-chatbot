@@ -11,8 +11,8 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# PostgreSQL connection string
-DATABASE_URL = "postgresql://postgres:uEutQJRqyRbgOlzwhsGGgczYXaeBqgxI@yamabiko.proxy.rlwy.net:14599/railway"
+# PostgreSQL connection string from environment variable
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:uEutQJRqyRbgOlzwhsGGgczYXaeBqgxI@yamabiko.proxy.rlwy.net:14599/railway")
 
 # Create SQLAlchemy engine
 engine = create_engine(DATABASE_URL)

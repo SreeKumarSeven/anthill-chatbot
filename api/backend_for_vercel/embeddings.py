@@ -5,14 +5,7 @@ from typing import List, Tuple, Optional
 from openai import OpenAI
 from dotenv import load_dotenv
 from api.backend_for_vercel.database_manager import DatabaseManager
-
-# Try to import faiss, but provide a fallback if it's not available
-try:
-    import faiss
-    FAISS_AVAILABLE = True
-except ImportError:
-    print("FAISS not available, using fallback similarity search")
-    FAISS_AVAILABLE = False
+from sklearn.metrics.pairwise import cosine_similarity
 
 # Load environment variables from .env file
 load_dotenv()
@@ -29,10 +22,9 @@ class FAQEmbeddingManager:
         self.faqs = self.load_faqs()
         
         # Flag to track if we have valid OpenAI API access
-        self.use_embeddings = True and FAISS_AVAILABLE  # Only use if FAISS is available
+        self.use_embeddings = True
         
-        # Initialize FAISS index
-        self.index = None
+        # Initialize embedding storage
         self.embeddings = None
         
         # For caching question embeddings with their index
@@ -43,7 +35,7 @@ class FAQEmbeddingManager:
             try:
                 self.build_index()
             except Exception as e:
-                print(f"Could not build FAISS index, falling back to keyword matching: {str(e)}")
+                print(f"Could not build embeddings index, falling back to keyword matching: {str(e)}")
                 self.use_embeddings = False
 
     def load_faqs(self) -> pd.DataFrame:
@@ -98,7 +90,7 @@ class FAQEmbeddingManager:
             return np.zeros(self.embedding_dim, dtype=np.float32)
 
     def build_index(self) -> bool:
-        """Build FAISS index from FAQs"""
+        """Build embeddings for all FAQs"""
         try:
             # Create embeddings for all questions
             embeddings = []
@@ -116,14 +108,10 @@ class FAQEmbeddingManager:
             # Convert to numpy array
             self.embeddings = np.array(embeddings, dtype=np.float32)
             
-            # Create FAISS index
-            self.index = faiss.IndexFlatL2(self.embedding_dim)
-            self.index.add(self.embeddings)
-            
-            print(f"Built FAISS index with {len(self.faqs)} FAQs")
+            print(f"Built embeddings index with {len(self.faqs)} FAQs")
             return True
         except Exception as e:
-            print(f"Error building FAISS index: {str(e)}")
+            print(f"Error building embeddings index: {str(e)}")
             self.use_embeddings = False
             return False
 
@@ -161,26 +149,22 @@ class FAQEmbeddingManager:
     def semantic_search(self, query: str, top_k: int = 3) -> List[Tuple[str, str, float]]:
         """Search for the top k most similar FAQs to the query"""
         try:
-            if not self.use_embeddings or self.index is None:
+            if not self.use_embeddings or self.embeddings is None:
                 raise Exception("Embeddings not available")
                 
             # Create embedding for query
             query_embedding = self.create_embedding(query)
-            query_embedding = np.array([query_embedding], dtype=np.float32)
+            query_embedding = np.array([query_embedding])
             
-            # Search the index
-            distances, indices = self.index.search(query_embedding, top_k)
+            # Calculate cosine similarity between query and all FAQ embeddings
+            similarities = cosine_similarity(query_embedding, self.embeddings)[0]
+            
+            # Get indices of top k most similar questions
+            top_indices = np.argsort(similarities)[::-1][:top_k]
             
             results = []
-            for i in range(len(indices[0])):
-                idx = indices[0][i]
-                distance = distances[0][i]
-                
-                # Convert distance to similarity score (0-1)
-                # FAISS uses L2 distance, so smaller is better
-                # We convert to a similarity score where 1 is perfect match
-                max_reasonable_distance = 10.0  # Hyperparameter to tune
-                similarity = max(0, 1 - (distance / max_reasonable_distance))
+            for idx in top_indices:
+                similarity = similarities[idx]
                 
                 # Get the FAQ details
                 question = self.faqs.iloc[idx]["Question"]
@@ -197,7 +181,7 @@ class FAQEmbeddingManager:
     def find_most_similar(self, query: str) -> Tuple[str, str, float]:
         """Find the most similar FAQ to the query"""
         # If embeddings are disabled or no index, use keyword matching
-        if not self.use_embeddings or self.index is None or len(self.faqs) == 0:
+        if not self.use_embeddings or self.embeddings is None or len(self.faqs) == 0:
             print("Using keyword matching instead of embeddings")
             return self.keyword_match(query)
             
