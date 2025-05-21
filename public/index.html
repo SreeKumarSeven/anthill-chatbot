@@ -54,7 +54,7 @@
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.async = true;
-        script.src = 'https://your-vercel-deployment-url.vercel.app/anthill-widget.js';
+        script.src = 'https://anthill-chatbot.vercel.app/anthill-widget.js';
         
         var entry = document.getElementsByTagName('script')[0];
         entry.parentNode.insertBefore(script, entry);
@@ -65,7 +65,7 @@
     <p>Alternatively, you can embed the chatbot using an iframe:</p>
     
     <pre class="code-snippet">&lt;iframe 
-    src="https://your-vercel-deployment-url.vercel.app/iframe.html" 
+    src="https://anthill-chatbot.vercel.app/iframe.html" 
     width="400" 
     height="600" 
     frameborder="0"
@@ -76,6 +76,19 @@
     <p>The Anthill IQ Chatbot API is currently <span id="api-status">checking status...</span></p>
     
     <a href="https://github.com/SreeKumarSeven/anthill-chatbot" class="button">View on GitHub</a>
+    
+    <!-- Add the actual chatbot widget to this page -->
+    <script>
+        (function() {
+            var script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.async = true;
+            script.src = '/anthill-widget.js';
+            
+            var entry = document.getElementsByTagName('script')[0];
+            entry.parentNode.insertBefore(script, entry);
+        })();
+    </script>
     
     <script>
         // Check API status

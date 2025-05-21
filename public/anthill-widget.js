@@ -2,8 +2,8 @@
 (function() {
     // Configuration - Replace with your deployed Vercel URL
     const CONFIG = {
-        API_URL: 'https://your-vercel-deployment-url.vercel.app/api/chat',
-        REGISTRATION_API_URL: 'https://your-vercel-deployment-url.vercel.app/api/register-user',
+        API_URL: 'https://anthill-chatbot.vercel.app/api/chat',
+        REGISTRATION_API_URL: 'https://anthill-chatbot.vercel.app/api/register-user',
         WIDGET_TITLE: 'Anthill IQ Assistant'
     };
 
