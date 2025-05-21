@@ -18,7 +18,17 @@ print(f"OpenAI API Key available: {bool(OPENAI_API_KEY)}")
 
 # Initialize OpenAI client
 try:
-    openai_client = OpenAI(api_key=OPENAI_API_KEY)
+    # For backward compatibility with older API keys
+    if OPENAI_API_KEY and OPENAI_API_KEY.startswith('sk-'):
+        openai_client = OpenAI(api_key=OPENAI_API_KEY)
+        print("OpenAI client initialized with SK key")
+    else:
+        # Try legacy format or fail
+        import openai as legacy_openai
+        legacy_openai.api_key = OPENAI_API_KEY
+        openai_client = legacy_openai
+        print("OpenAI client initialized with legacy format")
+    
     openai_available = True
     print("OpenAI client initialized successfully")
 except Exception as e:
@@ -144,17 +154,33 @@ class handler(BaseHTTPRequestHandler):
             # Process the chat message with OpenAI
             print(f"Sending message to OpenAI: {message[:50]}...")
             try:
-                response = openai_client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": SYSTEM_MESSAGE},
-                        {"role": "user", "content": message}
-                    ],
-                    temperature=0.7,
-                    max_tokens=500
-                )
+                # Check which OpenAI client version we're using
+                if hasattr(openai_client, 'chat') and hasattr(openai_client.chat, 'completions'):
+                    # New OpenAI client
+                    response = openai_client.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[
+                            {"role": "system", "content": SYSTEM_MESSAGE},
+                            {"role": "user", "content": message}
+                        ],
+                        temperature=0.7,
+                        max_tokens=500
+                    )
+                    bot_response = response.choices[0].message.content
+                else:
+                    # Legacy OpenAI client
+                    response = openai_client.ChatCompletion.create(
+                        model="gpt-3.5-turbo",
+                        messages=[
+                            {"role": "system", "content": SYSTEM_MESSAGE},
+                            {"role": "user", "content": message}
+                        ],
+                        temperature=0.7,
+                        max_tokens=500
+                    )
+                    bot_response = response['choices'][0]['message']['content']
+                
                 print("OpenAI response received successfully")
-                bot_response = response.choices[0].message.content
             except Exception as e:
                 print(f"Error from OpenAI API: {str(e)}")
                 self._send_json_response(500, {
