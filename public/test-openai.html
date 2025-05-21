@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAI API Key Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .button {
+            background-color: #4a2c8f;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            min-height: 100px;
+        }
+        .loading {
+            display: none;
+            margin-top: 20px;
+            font-style: italic;
+            color: #666;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>OpenAI API Key Test</h1>
+    <p>This page will test if the OpenAI API key is properly configured in your Vercel environment.</p>
+    
+    <button id="testButton" class="button">Test OpenAI API Key</button>
+    <div id="loading" class="loading">Testing OpenAI connection... please wait</div>
+    <div id="result" class="result">Results will appear here after testing.</div>
+    
+    <h2>What this test does:</h2>
+    <ol>
+        <li>Sends a simple request to the Anthill chatbot API</li>
+        <li>Checks if the API can successfully connect to OpenAI</li>
+        <li>Displays the response or error message</li>
+    </ol>
+    
+    <h2>If the test fails:</h2>
+    <ol>
+        <li>Make sure you've added the OpenAI API key to your Vercel environment variables</li>
+        <li>Verify the key is valid and has not expired</li>
+        <li>Ensure you've redeployed after adding the environment variable</li>
+        <li>Check the variable name is exactly <code>OPENAI_API_KEY</code></li>
+    </ol>
+    
+    <script>
+        document.getElementById('testButton').addEventListener('click', async function() {
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            
+            // Show loading message
+            loadingDiv.style.display = 'block';
+            resultDiv.innerHTML = '';
+            
+            try {
+                // Test simple message
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Hello, this is a test message to check if OpenAI is working.',
+                        user_id: 'test_user',
+                        session_id: 'test_session_' + Date.now()
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Hide loading
+                loadingDiv.style.display = 'none';
+                
+                if (data.source === 'openai') {
+                    // Success - OpenAI responded
+                    resultDiv.innerHTML = `
+                        <div class="success">SUCCESS: OpenAI API key is working correctly!</div>
+                        <p>Response from OpenAI:</p>
+                        <p><em>${data.response}</em></p>
+                    `;
+                } else if (data.source === 'fallback') {
+                    // Fallback response - OpenAI not working
+                    resultDiv.innerHTML = `
+                        <div class="error">ERROR: Using fallback responses instead of OpenAI.</div>
+                        <p>The chatbot is using hardcoded fallback responses, which means the OpenAI API key is not working.</p>
+                        <p>Fallback response received: <em>${data.response}</em></p>
+                        <p>Please check the Vercel environment variables.</p>
+                    `;
+                } else if (data.source === 'error') {
+                    // Error response
+                    resultDiv.innerHTML = `
+                        <div class="error">ERROR: OpenAI API key is not working.</div>
+                        <p>Error message: <em>${data.response}</em></p>
+                        <p>Please check the Vercel environment variables.</p>
+                    `;
+                } else {
+                    // Unknown response
+                    resultDiv.innerHTML = `
+                        <div class="error">UNKNOWN RESPONSE FORMAT</div>
+                        <p>Received an unexpected response format from the API.</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                // Network or other error
+                loadingDiv.style.display = 'none';
+                resultDiv.innerHTML = `
+                    <div class="error">NETWORK ERROR</div>
+                    <p>Could not connect to the API. Error details:</p>
+                    <p><em>${error.message}</em></p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html> 

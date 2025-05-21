@@ -12,9 +12,18 @@ import requests
 # Load environment variables
 load_dotenv()
 
-# Set API key
+# Set API key - with direct fallback option
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    # Try alternative environment variable names
+    OPENAI_API_KEY = os.getenv("OPENAI_KEY")
+    
+# Force print for debugging
+print(f"------------ CRITICAL DEBUG INFO ------------")
+print(f"OpenAI API Key: {OPENAI_API_KEY[:5] + '...' if OPENAI_API_KEY else 'None'}")
+print(f"OpenAI API Key length: {len(OPENAI_API_KEY) if OPENAI_API_KEY else 0}")
 print(f"OpenAI API Key available: {bool(OPENAI_API_KEY)}")
+print(f"-------------------------------------------")
 
 # Initialize OpenAI - use a more direct approach
 openai.api_key = OPENAI_API_KEY
@@ -138,13 +147,34 @@ class handler(BaseHTTPRequestHandler):
             
             debug_log(f"Received chat request. Message: '{message[:30]}...', User: {user_id}, Session: {session_id}")
             
+            # EMERGENCY FALLBACK - Respond directly if OpenAI is not available
             if not OPENAI_API_KEY:
-                debug_log("OpenAI API key not found in environment variables")
-                self._send_json_response(500, {
-                    "response": "I'm sorry, the chatbot is not available at the moment. API key missing.",
-                    "source": "error",
-                    "session_id": session_id or "new_session"
-                })
+                debug_log("⚠️ EMERGENCY MODE: OpenAI API key not found - using hardcoded responses")
+                
+                # Basic keyword matching for emergency responses
+                message_lower = message.lower()
+                
+                # Simple responses based on common queries
+                if any(word in message_lower for word in ['location', 'where', 'address', 'branch', 'center']):
+                    response = "Anthill IQ has four locations in Bangalore: Cunningham Road (Central), Hulimavu (Bannerghatta Road), Arekere (Bannerghatta Road), and our upcoming branch in Hebbal. Which location would be most convenient for you?"
+                elif any(word in message_lower for word in ['price', 'cost', 'fee', 'pricing', 'rate', 'charges']):
+                    response = "Our pricing varies based on your specific requirements and the location you choose. I'd be happy to connect you with our team for a personalized quote. Could you tell me which of our services you're most interested in?"
+                elif any(word in message_lower for word in ['contact', 'phone', 'call', 'email', 'reach']):
+                    response = "You can reach our team at 9119739119 or email us at connect@anthilliq.com. Would you like me to arrange for someone to contact you directly?"
+                elif any(word in message_lower for word in ['service', 'offer', 'workspace', 'amenities']):
+                    response = "We offer private offices, coworking spaces, dedicated desks, meeting rooms, event spaces, and training rooms. All our locations have high-speed internet, ergonomic furniture, 24/7 security, refreshments, and printing services. What type of workspace are you looking for?"
+                elif 'hello' in message_lower or 'hi' in message_lower.split() or 'hey' in message_lower:
+                    response = "Hello there! Welcome to Anthill IQ - Bangalore's premium coworking space. How can I assist you today?"
+                else:
+                    response = "Thank you for reaching out to Anthill IQ. We offer premium workspace solutions across Bangalore. Could you please let me know what you're looking for so I can better assist you?"
+                
+                result = {
+                    "response": response,
+                    "source": "fallback",
+                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                }
+                
+                self._send_json_response(200, result)
                 return
             
             # Process the chat message with OpenAI
