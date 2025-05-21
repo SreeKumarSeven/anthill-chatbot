@@ -609,3 +609,42 @@ Remember: you are having a conversation, not just providing information. Make th
                 "response": "I apologize, but I encountered an error processing your request. Please try again or contact our support team.",
                 "conversation_id": conversation_id
             }
+
+    def handle_message_sync(self, message, user_id=None):
+        """Synchronous version of handle_message for serverless functions"""
+        try:
+            # Basic intent classification
+            if self._is_greeting(message):
+                return {
+                    "response": "Hello! I'm the Anthill IQ Assistant. How can I help you today?",
+                    "source": "rule_based"
+                }
+            
+            if self._is_booking_request(message):
+                return {
+                    "response": "I'd be happy to help you schedule a consultation. What would you like to discuss?",
+                    "source": "rule_based",
+                    "should_start_booking": True
+                }
+            
+            # Call the AI model for more complex responses
+            response = self._generate_response(message)
+            
+            # Check if the response suggests a booking
+            if self._suggests_booking(response):
+                return {
+                    "response": response,
+                    "source": "ai",
+                    "should_start_booking": True
+                }
+            
+            return {
+                "response": response,
+                "source": "ai"
+            }
+        except Exception as e:
+            print(f"Error in chat handling: {str(e)}")
+            return {
+                "response": "I'm sorry, I'm having trouble processing your request. Please try again later.",
+                "source": "error"
+            }
