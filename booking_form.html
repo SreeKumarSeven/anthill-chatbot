@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anthill IQ Booking Form</title>
+    <style>
+        :root {
+            --primary-color: #6c63ff;
+            --secondary-color: #4a44b9;
+            --text-color: #333;
+            --light-bg: #f8f9fa;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            background-color: #fff;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .booking-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+        
+        .booking-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .booking-header h2 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .booking-header p {
+            color: #666;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+        }
+        
+        .required::after {
+            content: " *";
+            color: var(--error-color);
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .success {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+        
+        .error {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(108, 99, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .locations {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .location-option {
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .location-option:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .location-option.selected {
+            background-color: rgba(108, 99, 255, 0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .location-option h4 {
+            margin-bottom: 5px;
+        }
+        
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .time-slot {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .time-slot:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .time-slot.selected {
+            background-color: rgba(108, 99, 255, 0.1);
+            border-color: var(--primary-color);
+        }
+        
+        @media (max-width: 600px) {
+            .booking-container {
+                padding: 15px;
+                margin: 10px;
+                width: auto;
+            }
+            
+            .locations {
+                grid-template-columns: 1fr;
+            }
+            
+            .time-slots {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="booking-container">
+        <div class="booking-header">
+            <h2>Book a Space at Anthill IQ</h2>
+            <p>Fill out the form below to reserve your coworking space</p>
+        </div>
+        
+        <form id="booking-form">
+            <div class="form-group">
+                <label for="name" class="required">Full Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email" class="required">Email Address</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone" class="required">Phone Number</label>
+                <input type="tel" id="phone" name="phone" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="service_type" class="required">Service Type</label>
+                <select id="service_type" name="service_type" required>
+                    <option value="">Select a service</option>
+                    <option value="hot_desk">Hot Desk</option>
+                    <option value="dedicated_desk">Dedicated Desk</option>
+                    <option value="private_office">Private Office</option>
+                    <option value="meeting_room">Meeting Room</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="required">Preferred Location</label>
+                <div class="locations">
+                    <div class="location-option" data-location="kormangala">
+                        <h4>Koramangala</h4>
+                        <p>HSR Layout, Bangalore</p>
+                    </div>
+                    <div class="location-option" data-location="indiranagar">
+                        <h4>Indiranagar</h4>
+                        <p>100 Feet Road, Bangalore</p>
+                    </div>
+                    <div class="location-option" data-location="whitefield">
+                        <h4>Whitefield</h4>
+                        <p>ITPL Main Road, Bangalore</p>
+                    </div>
+                    <div class="location-option" data-location="electronic_city">
+                        <h4>Electronic City</h4>
+                        <p>Phase 1, Bangalore</p>
+                    </div>
+                </div>
+                <input type="hidden" id="location" name="location" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="num_seats" class="required">Number of Seats</label>
+                <input type="number" id="num_seats" name="num_seats" min="1" max="20" value="1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="date" class="required">Date</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="required">Time</label>
+                <div class="time-slots">
+                    <div class="time-slot" data-time="09:00">9:00 AM</div>
+                    <div class="time-slot" data-time="10:00">10:00 AM</div>
+                    <div class="time-slot" data-time="11:00">11:00 AM</div>
+                    <div class="time-slot" data-time="12:00">12:00 PM</div>
+                    <div class="time-slot" data-time="13:00">1:00 PM</div>
+                    <div class="time-slot" data-time="14:00">2:00 PM</div>
+                    <div class="time-slot" data-time="15:00">3:00 PM</div>
+                    <div class="time-slot" data-time="16:00">4:00 PM</div>
+                    <div class="time-slot" data-time="17:00">5:00 PM</div>
+                </div>
+                <input type="hidden" id="time" name="time" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="additional_notes">Additional Notes</label>
+                <textarea id="additional_notes" name="additional_notes" rows="3"></textarea>
+            </div>
+            
+            <button type="submit" id="submit-btn">Book Now</button>
+            
+            <div id="message" class="message" style="display: none;"></div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // API endpoint - update this to your actual backend URL
+            const API_URL = 'https://abcd.herokuapp.com/api/booking';
+            
+            // Get form elements
+            const form = document.getElementById('booking-form');
+            const submitBtn = document.getElementById('submit-btn');
+            const messageDiv = document.getElementById('message');
+            
+            // Set min date to today
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            document.getElementById('date').min = formattedDate;
+            
+            // Handle location selection
+            const locationOptions = document.querySelectorAll('.location-option');
+            locationOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove selected class from all options
+                    locationOptions.forEach(opt => opt.classList.remove('selected'));
+                    // Add selected class to clicked option
+                    this.classList.add('selected');
+                    // Update hidden input
+                    document.getElementById('location').value = this.dataset.location;
+                });
+            });
+            
+            // Handle time slot selection
+            const timeSlots = document.querySelectorAll('.time-slot');
+            timeSlots.forEach(slot => {
+                slot.addEventListener('click', function() {
+                    // Remove selected class from all slots
+                    timeSlots.forEach(s => s.classList.remove('selected'));
+                    // Add selected class to clicked slot
+                    this.classList.add('selected');
+                    // Update hidden input
+                    document.getElementById('time').value = this.dataset.time;
+                });
+            });
+            
+            // Form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate form
+                if (!validateForm()) {
+                    return;
+                }
+                
+                // Disable submit button and show loading
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<div class="loading"><div class="spinner"></div> Processing...</div>';
+                messageDiv.style.display = 'none';
+                
+                // Collect form data
+                const formData = {
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    service_type: document.getElementById('service_type').value,
+                    location: document.getElementById('location').value,
+                    num_seats: parseInt(document.getElementById('num_seats').value),
+                    date: document.getElementById('date').value,
+                    time: document.getElementById('time').value,
+                    additional_notes: document.getElementById('additional_notes').value || ""
+                };
+                
+                // Send booking request
+                fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Show success message
+                    messageDiv.className = 'message success';
+                    messageDiv.textContent = 'Booking successful! We will contact you shortly to confirm your reservation.';
+                    messageDiv.style.display = 'block';
+                    
+                    // Reset form
+                    form.reset();
+                    locationOptions.forEach(opt => opt.classList.remove('selected'));
+                    timeSlots.forEach(slot => slot.classList.remove('selected'));
+                    
+                    // Re-enable submit button
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Book Now';
+                })
+                .catch(error => {
+                    // Show error message
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = 'There was a problem with your booking. Please try again or contact us directly.';
+                    messageDiv.style.display = 'block';
+                    
+                    // Re-enable submit button
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Book Now';
+                    
+                    console.error('Error:', error);
+                });
+            });
+            
+            // Form validation
+            function validateForm() {
+                let isValid = true;
+                
+                // Check required fields
+                const requiredFields = form.querySelectorAll('[required]');
+                requiredFields.forEach(field => {
+                    if (!field.value) {
+                        isValid = false;
+                        field.style.borderColor = 'var(--error-color)';
+                    } else {
+                        field.style.borderColor = 'var(--border-color)';
+                    }
+                });
+                
+                if (!isValid) {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = 'Please fill in all required fields.';
+                    messageDiv.style.display = 'block';
+                }
+                
+                return isValid;
+            }
+        });
+    </script>
+</body>
+</html> 

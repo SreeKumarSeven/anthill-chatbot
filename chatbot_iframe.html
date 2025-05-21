@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Anthill IQ Chatbot</title>
+    <style>
+        /* Reset styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body, html {
+            height: 100%;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+        
+        /* Chat container */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        /* Chat header */
+        .chat-header {
+            background: linear-gradient(135deg, #2a9a16, #228512);
+            color: white;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        
+        .chat-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .close-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            height: 24px;
+            width: 24px;
+            line-height: 24px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        
+        .close-button:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Chat messages area */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background-color: #f8fafc;
+            scrollbar-width: thin;
+            scroll-behavior: smooth;
+        }
+        
+        /* Custom scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+        
+        /* Message styles */
+        .message-wrapper {
+            display: flex;
+            margin-bottom: 16px;
+            width: 100%;
+            flex-direction: column;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.5;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .user-message {
+            background-color: #2a9a16;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 6px;
+        }
+        
+        .bot-message {
+            background-color: white;
+            color: #333;
+            margin-right: auto;
+            border-bottom-left-radius: 6px;
+        }
+        
+        /* Registration form */
+        .user-registration-form {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background-color: white;
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .user-registration-form h3 {
+            color: #2a9a16;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .user-registration-form p {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #666;
+        }
+        
+        .form-input {
+            margin-bottom: 16px;
+        }
+        
+        .form-input label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-input input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .form-button {
+            background-color: #2a9a16;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .form-button:hover {
+            background-color: #228512;
+        }
+        
+        /* Input area */
+        .chat-input-area {
+            padding: 16px;
+            background-color: white;
+            display: flex;
+            gap: 12px;
+            border-top: 1px solid #eee;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 24px;
+            font-size: 16px;
+            resize: none;
+            max-height: 120px;
+            min-height: 48px;
+            overflow-y: auto;
+        }
+        
+        .send-button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: #2a9a16;
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background-color 0.2s ease;
+        }
+        
+        .send-button:hover {
+            background-color: #228512;
+        }
+        
+        /* Typing indicator */
+        .typing-indicator {
+            color: #999;
+            font-style: italic;
+            margin-bottom: 16px;
+            margin-left: 8px;
+        }
+        
+        /* Hide elements by default */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="anthillChatbot" class="chat-container">
+        <!-- Chat header -->
+        <div class="chat-header">
+            <h3>Anthill IQ Assistant</h3>
+            <button id="closeChat" class="close-button">×</button>
+        </div>
+        
+        <!-- User registration form (shown first) -->
+        <div id="userRegistrationForm" class="user-registration-form">
+            <h3>Welcome to Anthill IQ</h3>
+            <p>Please share your details to start chatting with our assistant.</p>
+            
+            <form id="registrationForm">
+                <div class="form-input">
+                    <label for="userName">Your Name</label>
+                    <input type="text" id="userName" placeholder="Enter your name" required>
+                </div>
+                
+                <div class="form-input">
+                    <label for="userPhone">Phone Number</label>
+                    <input type="tel" id="userPhone" placeholder="Enter your phone number" required>
+                </div>
+                
+                <button type="submit" class="form-button">Start Chatting</button>
+            </form>
+        </div>
+        
+        <!-- Chat messages area (hidden initially) -->
+        <div id="chatMessages" class="chat-messages hidden"></div>
+        
+        <!-- Chat input area (hidden initially) -->
+        <div id="chatInputArea" class="chat-input-area hidden">
+            <textarea id="chatInput" class="chat-input" placeholder="Type your message..." rows="1"></textarea>
+            <button id="sendMessage" class="send-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            API_URL: 'https://abcd.herokuapp.com/api/chat',
+            USER_REGISTRATION_API_URL: 'https://abcd.herokuapp.com/api/register-user',
+            INITIAL_MESSAGE: 'Hello! I\'m the Anthill IQ Assistant. How can I help you today?'
+        };
+        
+        // Elements
+        const userRegistrationForm = document.getElementById('userRegistrationForm');
+        const registrationForm = document.getElementById('registrationForm');
+        const userName = document.getElementById('userName');
+        const userPhone = document.getElementById('userPhone');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInputArea = document.getElementById('chatInputArea');
+        const chatInput = document.getElementById('chatInput');
+        const sendMessage = document.getElementById('sendMessage');
+        const closeChat = document.getElementById('closeChat');
+        
+        // Variables
+        let sessionId = generateSessionId();
+        let userData = {};
+        let isTyping = false;
+        
+        // Initialize
+        function init() {
+            addEventListeners();
+            
+            // Send a message to parent window that the iframe is ready
+            try {
+                window.parent.postMessage('iframe-loaded', '*');
+            } catch (e) {
+                console.error('Could not communicate with parent frame:', e);
+            }
+        }
+        
+        // Add event listeners
+        function addEventListeners() {
+            registrationForm.addEventListener('submit', handleRegistration);
+            sendMessage.addEventListener('click', handleSendMessage);
+            chatInput.addEventListener('keydown', handleInputKeydown);
+            closeChat.addEventListener('click', handleCloseChat);
+            chatInput.addEventListener('input', autoResizeTextarea);
+        }
+        
+        // Handle registration form submission
+        function handleRegistration(e) {
+            e.preventDefault();
+            
+            // Get user data
+            userData = {
+                name: userName.value.trim(),
+                phone: userPhone.value.trim()
+            };
+            
+            // Show loading state
+            const submitButton = registrationForm.querySelector('button[type="submit"]');
+            submitButton.textContent = 'Loading...';
+            submitButton.disabled = true;
+            
+            // Register user with API
+            fetch(CONFIG.USER_REGISTRATION_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: userData.name,
+                    phone: userData.phone,
+                    session_id: sessionId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Save session ID from response
+                if (data.session_id) {
+                    sessionId = data.session_id;
+                }
+                
+                // Show chat interface
+                userRegistrationForm.classList.add('hidden');
+                chatMessages.classList.remove('hidden');
+                chatInputArea.classList.remove('hidden');
+                
+                // Show welcome message
+                appendMessage(`Hello ${userData.name}! ${CONFIG.INITIAL_MESSAGE}`, 'bot');
+                
+                // Focus on input
+                chatInput.focus();
+            })
+            .catch(error => {
+                console.error('Error registering user:', error);
+                alert('Sorry, there was an error connecting to our servers. Please try again.');
+                submitButton.textContent = 'Start Chatting';
+                submitButton.disabled = false;
+            });
+        }
+        
+        // Handle sending a message
+        function handleSendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            // Clear input
+            chatInput.value = '';
+            resetTextareaHeight();
+            
+            // Add message to chat
+            appendMessage(message, 'user');
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Send message to API
+            fetch(CONFIG.API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: message,
+                    session_id: sessionId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide typing indicator
+                hideTypingIndicator();
+                
+                // Show response
+                if (data.response) {
+                    appendMessage(data.response, 'bot');
+                }
+            })
+            .catch(error => {
+                console.error('Error sending message:', error);
+                hideTypingIndicator();
+                appendMessage('Sorry, I couldn\'t process your message. Please try again.', 'bot');
+            });
+        }
+        
+        // Handle input keydown (for Enter key)
+        function handleInputKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+            }
+        }
+        
+        // Auto-resize textarea
+        function autoResizeTextarea() {
+            chatInput.style.height = 'auto';
+            chatInput.style.height = (chatInput.scrollHeight) + 'px';
+        }
+        
+        // Reset textarea height
+        function resetTextareaHeight() {
+            chatInput.style.height = '48px';
+        }
+        
+        // Append a message to the chat
+        function appendMessage(text, sender) {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = 'message-wrapper';
+            
+            const message = document.createElement('div');
+            message.className = `message ${sender}-message`;
+            message.textContent = text;
+            
+            messageWrapper.appendChild(message);
+            chatMessages.appendChild(messageWrapper);
+            
+            // Scroll to bottom
+            scrollToBottom();
+        }
+        
+        // Show typing indicator
+        function showTypingIndicator() {
+            if (isTyping) return;
+            
+            isTyping = true;
+            const indicator = document.createElement('div');
+            indicator.id = 'typingIndicator';
+            indicator.className = 'typing-indicator';
+            indicator.textContent = 'Anthill IQ is typing...';
+            chatMessages.appendChild(indicator);
+            
+            scrollToBottom();
+        }
+        
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            isTyping = false;
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+        
+        // Scroll chat to bottom
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Handle closing the chat
+        function handleCloseChat() {
+            try {
+                // Send message to parent window to close the iframe
+                window.parent.postMessage('close-chat', '*');
+            } catch (e) {
+                console.error('Could not communicate with parent frame:', e);
+            }
+        }
+        
+        // Generate a unique session ID
+        function generateSessionId() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
