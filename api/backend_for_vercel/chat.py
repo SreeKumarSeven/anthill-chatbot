@@ -437,7 +437,7 @@ For pricing, capacity information, and availability, please contact us at 911973
                 return {
                     "response": """Thank you for your interest in our pricing!
 
-Our pricing varies based on location, service type, and duration. Each of our branches (Cunningham Road, Arekere, Hulimavu, and our upcoming Hebbal branch) offers customized packages designed to meet your specific needs.
+Our pricing varies based on location, service type, and duration. Each of our branches (Cunningham Road, Arekere, Hulimavu, and Hebbal) offers customized packages designed to meet your specific needs.
 
 For detailed pricing information, please contact us directly:
 • Phone: 9119739119
@@ -490,7 +490,7 @@ Your personality traits:
 - Proactive in providing relevant information and asking follow-up questions
 
 IMPORTANT INFORMATION:
-- Anthill IQ has FOUR locations: Cunningham Road (Central Bangalore), Hulimavu (Bannerghatta Road), Arekere (Bannerghatta Road), and a new branch opening soon in Hebbal
+- Anthill IQ has FOUR locations: Cunningham Road (Central Bangalore), Hulimavu (Bannerghatta Road), Arekere (Bannerghatta Road), and our branch in Hebbal
 - We offer private offices, coworking spaces, dedicated desks, meeting rooms, event spaces, and virtual office services
 - All locations feature high-speed internet, 24/7 security, professional meeting spaces, and community events
 - Our contact: Phone: 9119739119, Email: connect@anthilliq.com

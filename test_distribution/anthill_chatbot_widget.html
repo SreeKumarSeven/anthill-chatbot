@@ -1551,7 +1551,7 @@ Need help? You can go back to select a different service, or cancel the booking 
                     }
                     
                     if (section.includes('4. Hebbal') || section.includes('Hebbal')) {
-                        formattedText += '4. Hebbal (North Bangalore - Opening Soon)\n\n';
+                        formattedText += '4. Hebbal (North Bangalore)\n\n';
                     }
                     
                     // Add a generic message about booking
@@ -2234,7 +2234,7 @@ Is there anything else I can help you with today?`, 'bot', 'booking_confirmation
    • Technical support
    • Flexible configurations
 
-All our existing locations (Cunningham Road, Hulimavu, and Arekere) offer these services with state-of-the-art facilities and amenities. We're also excited to announce our upcoming new branch in Hebbal, opening soon!
+All our existing locations (Cunningham Road, Hulimavu, and Arekere) offer these services with state-of-the-art facilities and amenities. We're also excited to announce that our Hebbal branch is now open!
 
 For pricing information, please contact us at ${CONFIG.CONTACT_NUMBER} or ${CONFIG.CONTACT_EMAIL}.
 
@@ -2260,7 +2260,7 @@ Would you like to know more about any specific service or would you like to book
             if (pricingPatterns.some(pattern => lowerMessage.includes(pattern))) {
                 return `Thank you for your interest in our pricing!
 
-Our pricing varies based on location, service type, and duration. Each of our branches (Cunningham Road, Arekere, Hulimavu, and our upcoming Hebbal branch) offers customized packages designed to meet your specific needs.
+Our pricing varies based on location, service type, and duration. Each of our branches (Cunningham Road, Arekere, Hulimavu, and Hebbal) offers customized packages designed to meet your specific needs.
 
 For detailed pricing information, please contact us directly:
 • Phone: ${CONFIG.CONTACT_NUMBER}
