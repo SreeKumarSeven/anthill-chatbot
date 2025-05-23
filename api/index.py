@@ -105,22 +105,27 @@ def fix_hebbal_references(text):
     """
     # First, check if the text contains any mention of Hebbal
     if 'hebbal' in text.lower():
-        # If it contains phrases indicating it's not open, replace the entire text
+        # If it contains phrases indicating it's not open, replace the entire sentence
         lower_text = text.lower()
         
         # Check for problematic phrases
         problematic_phrases = [
             "opening soon", "will be opening", "upcoming", "not yet open", 
             "isn't open yet", "is not open yet", "coming soon", "launching soon",
-            "will open", "about to open", "planned", "in the works", "preparing to open",
-            "actually opening", "actually, the hebbal", "actually, our hebbal", "oh, the hebbal",
-            "going to be", "will be an", "will be a"
+            "will open", "about to open", "planned", "in the works", "preparing to open"
         ]
         
-        # If any problematic phrase is found near "hebbal", replace the entire response
+        # If any problematic phrase is found near "hebbal", apply more aggressive replacement
         for phrase in problematic_phrases:
-            if phrase in lower_text and abs(lower_text.find(phrase) - lower_text.find("hebbal")) < 200:
-                return "Our Hebbal branch is NOW OPEN in North Bangalore. This is our newest fully operational location and offers all services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?"
+            if phrase in lower_text and abs(lower_text.find(phrase) - lower_text.find("hebbal")) < 100:
+                # Find the sentence containing both Hebbal and the problematic phrase
+                sentences = text.split('.')
+                for i, sentence in enumerate(sentences):
+                    if 'hebbal' in sentence.lower() and any(p in sentence.lower() for p in problematic_phrases):
+                        sentences[i] = "Our Hebbal branch is NOW OPEN in North Bangalore."
+                
+                # Reconstruct the text
+                text = '.'.join(sentences)
     
     # Common patterns to search for and replace
     replacements = [
@@ -158,16 +163,7 @@ def fix_hebbal_references(text):
         ("Hebbal branch that will be", "Hebbal branch that is now"),
         ("Hebbal branch, which will be", "Hebbal branch, which is now"),
         ("we're really excited about", "we're really excited that it's now open. Would you like to know more about"),
-        ("we're excited about", "we're excited that it's now open. Would you like to know more about"),
-        ("actually, the Hebbal branch is opening soon", "the Hebbal branch is now open"),
-        ("actually, our Hebbal branch is opening soon", "our Hebbal branch is now open"),
-        ("Oh, the Hebbal branch is actually opening soon", "The Hebbal branch is now open"),
-        ("going to be an amazing", "now an amazing"),
-        ("will be an amazing", "is an amazing"),
-        ("will be a fantastic", "is a fantastic"),
-        ("once it's open", "now that it's open"),
-        ("once it's up and running", "now that it's up and running"),
-        ("considering working out of the Hebbal", "considering working out of our now open Hebbal")
+        ("we're excited about", "we're excited that it's now open. Would you like to know more about")
     ]
     
     # Apply all replacements
@@ -244,14 +240,6 @@ class handler(BaseHTTPRequestHandler):
                     "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
                 }
                 
-                # Log the direct response
-                debug_log("Providing direct response for Hebbal query")
-                
-                # Log conversation to database if available
-                db = get_db()
-                if db:
-                    db.log_conversation(message, hebbal_response, "direct_handler", user_id)
-                
                 self._send_json_response(200, result)
                 return
             
@@ -296,19 +284,11 @@ class handler(BaseHTTPRequestHandler):
                 
                 # NEW: Simplified direct API request using the legacy client
                 debug_log("Using legacy OpenAI client (v0.28.1)")
-                
-                # Add a specific instruction about Hebbal to every user message
-                user_message = message
-                if 'hebbal' in message.lower():
-                    user_message = f"IMPORTANT: The Hebbal branch is NOW OPEN. Please respond accordingly.\n\nUser query: {message}"
-                else:
-                    user_message = message
-                
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": SYSTEM_MESSAGE},
-                        {"role": "user", "content": user_message}
+                        {"role": "user", "content": message}
                     ],
                     temperature=0.7,
                     max_tokens=500
