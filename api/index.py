@@ -66,7 +66,7 @@ Anthill IQ has FOUR locations in Bangalore:
 1. Cunningham Road branch (Central Bangalore)
 2. Hulimavu branch (Bannerghatta Road, South Bangalore)
 3. Arekere branch (Bannerghatta Road, South Bangalore)
-4. Hebbal branch (North Bangalore) - NOW OPEN
+4. Hebbal branch (North Bangalore) - NOW OPEN (NOT "opening soon" or "upcoming")
 
 CONTACT INFORMATION:
 - Phone: 9119739119
@@ -80,6 +80,7 @@ IMPORTANT GUIDELINES:
 5. Don't provide specific pricing - suggest contacting us
 6. Make sure your responses sound like a real conversation
 7. VERY IMPORTANT: ALWAYS state that the Hebbal branch is OPEN, NOT "opening soon" or "upcoming"
+8. If asked about Hebbal location, explicitly state "Our Hebbal branch is OPEN and fully operational"
 """
 
 # Initialize database connection (importing inside the function to avoid startup errors)
@@ -102,6 +103,30 @@ def fix_hebbal_references(text):
     Post-process text to ensure Hebbal is described as open, not upcoming
     This is a safety measure in case the AI still mentions Hebbal as 'opening soon'
     """
+    # First, check if the text contains any mention of Hebbal
+    if 'hebbal' in text.lower():
+        # If it contains phrases indicating it's not open, replace the entire sentence
+        lower_text = text.lower()
+        
+        # Check for problematic phrases
+        problematic_phrases = [
+            "opening soon", "will be opening", "upcoming", "not yet open", 
+            "isn't open yet", "is not open yet", "coming soon", "launching soon",
+            "will open", "about to open", "planned", "in the works", "preparing to open"
+        ]
+        
+        # If any problematic phrase is found near "hebbal", apply more aggressive replacement
+        for phrase in problematic_phrases:
+            if phrase in lower_text and abs(lower_text.find(phrase) - lower_text.find("hebbal")) < 100:
+                # Find the sentence containing both Hebbal and the problematic phrase
+                sentences = text.split('.')
+                for i, sentence in enumerate(sentences):
+                    if 'hebbal' in sentence.lower() and any(p in sentence.lower() for p in problematic_phrases):
+                        sentences[i] = "Our Hebbal branch is NOW OPEN in North Bangalore."
+                
+                # Reconstruct the text
+                text = '.'.join(sentences)
+    
     # Common patterns to search for and replace
     replacements = [
         ("our newest branch opening soon in Hebbal", "our newest branch in Hebbal"),
@@ -116,7 +141,29 @@ def fix_hebbal_references(text):
         ("Hebbal, opening soon", "Hebbal, which is now open"),
         ("Hebbal branch is opening soon", "Hebbal branch is now open"),
         ("Hebbal branch will be opening soon", "Hebbal branch is now open"),
-        ("set to open soon", "now open")
+        ("set to open soon", "now open"),
+        ("Hebbal soon", "Hebbal, which is now open"),
+        ("soon-to-open Hebbal", "now open Hebbal"),
+        ("planning to open in Hebbal", "now open in Hebbal"),
+        ("new branch in Hebbal", "branch in Hebbal"),
+        ("upcoming location in Hebbal", "location in Hebbal"),
+        ("Hebbal location will soon be", "Hebbal location is now"),
+        ("new Hebbal branch", "Hebbal branch"),
+        ("Hebbal branch is not yet open", "Hebbal branch is now open"),
+        ("Hebbal branch isn't open yet", "Hebbal branch is now open"),
+        ("Hebbal branch is coming soon", "Hebbal branch is now open"),
+        ("fourth branch in Hebbal", "branch in Hebbal"),
+        ("4th branch in Hebbal", "branch in Hebbal"),
+        ("Hebbal, which is not yet open", "Hebbal, which is now open"),
+        ("Hebbal which is not yet open", "Hebbal which is now open"),
+        ("planning to launch in Hebbal", "now operating in Hebbal"),
+        ("Hebbal (launching", "Hebbal (now open"),
+        ("excited about our Hebbal branch", "excited about our now open Hebbal branch"),
+        ("excited about the Hebbal branch", "excited about our now open Hebbal branch"),
+        ("Hebbal branch that will be", "Hebbal branch that is now"),
+        ("Hebbal branch, which will be", "Hebbal branch, which is now"),
+        ("we're really excited about", "we're really excited that it's now open. Would you like to know more about"),
+        ("we're excited about", "we're excited that it's now open. Would you like to know more about")
     ]
     
     # Apply all replacements
@@ -181,6 +228,20 @@ class handler(BaseHTTPRequestHandler):
             session_id = data.get('session_id', None)
             
             debug_log(f"Received chat request. Message: '{message[:30]}...', User: {user_id}, Session: {session_id}")
+            
+            # SPECIAL CASE: Direct handling for Hebbal branch queries
+            message_lower = message.lower()
+            if 'hebbal' in message_lower and any(word in message_lower for word in ['branch', 'location', 'open', 'new']):
+                hebbal_response = "Our Hebbal branch is NOW OPEN in North Bangalore. This is our newest fully operational location and offers all services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?"
+                
+                result = {
+                    "response": hebbal_response,
+                    "source": "direct_handler",
+                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                }
+                
+                self._send_json_response(200, result)
+                return
             
             # EMERGENCY FALLBACK - Respond directly if OpenAI is not available
             if not OPENAI_API_KEY:
