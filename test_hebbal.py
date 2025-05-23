@@ -8,7 +8,7 @@ def test_hebbal_reference():
     api_url = "https://anthill-chatbot.vercel.app/api/chat"
     
     # Test message specifically asking about Hebbal
-    test_message = "Tell me about your Hebbal branch. Is it open yet?"
+    test_message = "Is your Hebbal branch open now?"
     
     # Send request
     response = requests.post(
