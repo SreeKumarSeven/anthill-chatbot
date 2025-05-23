@@ -244,6 +244,14 @@ class handler(BaseHTTPRequestHandler):
                     "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
                 }
                 
+                # Log the direct response
+                debug_log("Providing direct response for Hebbal query")
+                
+                # Log conversation to database if available
+                db = get_db()
+                if db:
+                    db.log_conversation(message, hebbal_response, "direct_handler", user_id)
+                
                 self._send_json_response(200, result)
                 return
             
