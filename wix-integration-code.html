@@ -1,19 +1,140 @@
-<!-- Anthill IQ Chatbot Integration Code for Wix -->
-<!-- Method 1: JavaScript Widget (Recommended) -->
+<!-- Anthill IQ Chat Widget for Wix - Updated Version -->
+<style>
+    #anthill-chat-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+    }
+    
+    #anthill-chat-button {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #2a9a16;
+        color: white;
+        border: none;
+        box-shadow: 0 4px 12px rgba(42, 154, 22, 0.3);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    #anthill-chat-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(42, 154, 22, 0.4);
+    }
+    
+    #anthill-chat-button svg {
+        width: 30px;
+        height: 30px;
+        fill: white;
+    }
+    
+    #anthill-chat-window {
+        position: absolute;
+        bottom: 80px;
+        right: 0;
+        width: 360px;
+        height: 520px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        display: none;
+        flex-direction: column;
+        transition: all 0.3s ease;
+    }
+    
+    #anthill-chat-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+    
+    @keyframes slideIn {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .slide-in {
+        animation: slideIn 0.3s forwards;
+    }
+    
+    @media (max-width: 480px) {
+        #anthill-chat-window {
+            width: 100%;
+            right: 0;
+            bottom: 70px;
+            height: calc(100% - 70px);
+            border-radius: 0;
+            position: fixed;
+        }
+        
+        #anthill-chat-button {
+            width: 50px;
+            height: 50px;
+        }
+    }
+</style>
 
-<div id="anthill-chatbot-container"></div>
+<div id="anthill-chat-container">
+    <button id="anthill-chat-button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M12 1c-6.627 0-12 4.364-12 9.749 0 3.131 1.817 5.917 4.64 7.7.868 2.167-1.083 4.008-3.142 4.503 2.271.195 6.311-.121 9.374-2.498 7.095.538 13.128-3.997 13.128-9.705 0-5.385-5.373-9.749-12-9.749zm-5 8c-.553 0-1-.448-1-1s.447-1 1-1 1 .448 1 1-.447 1-1 1zm5 0c-.553 0-1-.448-1-1s.447-1 1-1 1 .448 1 1-.447 1-1 1zm5 0c-.553 0-1-.448-1-1s.447-1 1-1 1 .448 1 1-.447 1-1 1z"/>
+        </svg>
+    </button>
+    
+    <div id="anthill-chat-window">
+        <iframe id="anthill-chat-iframe" src="https://anthill-chatbot.vercel.app/iframe.html" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+    </div>
+</div>
+
 <script>
-    (function() {
-        var script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.async = true;
+    document.addEventListener('DOMContentLoaded', function() {
+        const button = document.getElementById('anthill-chat-button');
+        const chatWindow = document.getElementById('anthill-chat-window');
         
-        // Replace with your preferred production URL
-        script.src = 'https://anthill-chatbot-ghm916hgr-sreekumar-thorsigniaos-projects.vercel.app/anthill_chatbot_widget.js';
+        // Function to toggle chat window
+        function toggleChat() {
+            if (chatWindow.style.display === 'flex') {
+                chatWindow.style.display = 'none';
+            } else {
+                chatWindow.style.display = 'flex';
+                chatWindow.classList.add('slide-in');
+            }
+        }
         
-        var entry = document.getElementsByTagName('script')[0];
-        entry.parentNode.insertBefore(script, entry);
-    })();
+        // Add click event to button
+        button.addEventListener('click', toggleChat);
+        
+        // Listen for messages from iframe
+        window.addEventListener('message', function(event) {
+            // Check if message is from our iframe
+            if (event.data === 'closeChat') {
+                chatWindow.style.display = 'none';
+            }
+        });
+        
+        // Check if chat widget should be hidden on specific pages
+        function shouldHideChatWidget() {
+            // Add any URL patterns where you want to hide the chat widget
+            const urlsToHide = [
+                '/contact', 
+                '/checkout'
+            ];
+            
+            return urlsToHide.some(url => window.location.pathname.includes(url));
+        }
+        
+        // Hide chat widget on specific pages
+        if (shouldHideChatWidget()) {
+            document.getElementById('anthill-chat-container').style.display = 'none';
+        }
+    });
 </script>
 
 <!-- 

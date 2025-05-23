@@ -25,7 +25,7 @@
         }
         
         .chatbot-header {
-            background-color: #4a2c8f;
+            background-color: #2a9a16;
             color: white;
             padding: 15px;
             font-weight: bold;
@@ -62,7 +62,7 @@
         }
         
         .bot-message {
-            background-color: #4a2c8f;
+            background-color: #2a9a16;
             color: white;
             margin-right: auto;
             border-bottom-left-radius: 4px;
@@ -85,7 +85,7 @@
         }
         
         #send-button {
-            background-color: #4a2c8f;
+            background-color: #2a9a16;
             color: white;
             border: none;
             padding: 0 20px;
@@ -95,7 +95,7 @@
         }
         
         #send-button:hover {
-            background-color: #3a1c7f;
+            background-color: #228512;
         }
         
         /* Registration form styling */
@@ -122,7 +122,7 @@
         }
         
         .submit-button {
-            background-color: #4a2c8f;
+            background-color: #2a9a16;
             color: white;
             border: none;
             padding: 12px 20px;
@@ -137,6 +137,7 @@
     <div class="chatbot-container">
         <div class="chatbot-header">
             <span>Anthill IQ Assistant</span>
+            <button id="close-button" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">×</button>
         </div>
         
         <div id="registration-container" class="registration-form">
@@ -175,9 +176,16 @@
         const messageInput = document.getElementById('message-input');
         const sendButton = document.getElementById('send-button');
         const registerButton = document.getElementById('register-button');
+        const closeButton = document.getElementById('close-button');
         
         let userId = null;
         let sessionId = null;
+        
+        // Close button handler
+        closeButton.addEventListener('click', function() {
+            // Send message to parent window to close the chat
+            window.parent.postMessage('closeChat', '*');
+        });
         
         // Add a bot message to the chat
         function addBotMessage(text) {
@@ -250,47 +258,52 @@
                     registrationContainer.style.display = 'none';
                     chatContainer.style.display = 'flex';
                     
-                    // Add welcome message
-                    addBotMessage(`Hello ${name}! Welcome to Anthill IQ. How can I help you today?`);
+                    // Welcome message
+                    addBotMessage("Hello! I'm the Anthill IQ Assistant. How can I help you today?");
+                    
+                    // Focus on input
+                    messageInput.focus();
                 } else {
-                    alert('Registration failed. Please try again.');
+                    alert('There was an error registering. Please try again.');
                 }
             } catch (error) {
                 console.error('Error registering user:', error);
-                alert('There was an error connecting to the service.');
+                alert('There was an error connecting to the service. Please try again later.');
             }
         }
         
-        // Event listeners
-        registerButton.addEventListener('click', () => {
-            const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
-            
-            if (!name || !phone) {
-                alert('Please provide both name and phone number to continue');
-                return;
-            }
-            
-            registerUser(name, phone);
-        });
-        
-        sendButton.addEventListener('click', () => {
-            const message = messageInput.value.trim();
-            if (message) {
-                addUserMessage(message);
-                sendMessage(message);
+        // Handle send button click
+        sendButton.addEventListener('click', function() {
+            const text = messageInput.value.trim();
+            if (text) {
+                addUserMessage(text);
+                sendMessage(text);
                 messageInput.value = '';
             }
         });
         
-        messageInput.addEventListener('keypress', (e) => {
+        // Handle enter key in message input
+        messageInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                const message = messageInput.value.trim();
-                if (message) {
-                    addUserMessage(message);
-                    sendMessage(message);
+                const text = messageInput.value.trim();
+                if (text) {
+                    addUserMessage(text);
+                    sendMessage(text);
                     messageInput.value = '';
                 }
+                e.preventDefault();
+            }
+        });
+        
+        // Handle register button click
+        registerButton.addEventListener('click', function() {
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            
+            if (name && phone) {
+                registerUser(name, phone);
+            } else {
+                alert('Please fill in all fields');
             }
         });
     </script>
