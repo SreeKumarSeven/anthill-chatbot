@@ -7,9 +7,15 @@ def test_hebbal_simple():
     
     # API endpoint
     api_url = "https://anthill-chatbot.vercel.app/api/chat"
+    print(f"Testing API at: {api_url}")
     
     # Test message specifically asking about Hebbal
     test_message = "Is your Hebbal branch open yet?"
+    print(f"Query: {test_message}")
+    
+    # Generate a unique session ID with timestamp to avoid caching
+    session_id = f"test_session_{int(time.time())}"
+    print(f"Session ID: {session_id}")
     
     # Send request with unique session ID to avoid caching
     response = requests.post(
@@ -18,7 +24,7 @@ def test_hebbal_simple():
         data=json.dumps({
             "message": test_message,
             "user_id": "test_user",
-            "session_id": f"test_session_{int(time.time())}"
+            "session_id": session_id
         })
     )
     
@@ -34,4 +40,6 @@ def test_hebbal_simple():
         print("Error:", response.text)
 
 if __name__ == "__main__":
+    print("Waiting 10 seconds to ensure deployment is complete...")
+    time.sleep(10)
     test_hebbal_simple() 
