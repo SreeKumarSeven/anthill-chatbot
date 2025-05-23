@@ -1,6 +1,6 @@
 # Anthill IQ Chatbot
 
-A conversational AI chatbot for Anthill IQ coworking spaces in Bangalore.
+A conversational AI chatbot for Anthill IQ coworking spaces in Bangalore. Last updated: [timestamp: 2023-12-01]
 
 ## Locations
 
