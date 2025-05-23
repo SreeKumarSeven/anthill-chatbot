@@ -120,7 +120,7 @@ class ChatManager:
             locations_text += "1. Cunningham Road (Central Bangalore)\n"
             locations_text += "2. Arekere (South Bangalore)\n"
             locations_text += "3. Hulimavu (South Bangalore)\n"
-            locations_text += "4. Hebbal (Opening Soon)\n\n"
+            locations_text += "4. Hebbal (North Bangalore)\n\n"
             
             locations_text += "You can select any of these locations when booking through our website or this chatbot."
             
@@ -139,14 +139,14 @@ class ChatManager:
             locations_text += "3. Hulimavu\n"
             locations_text += "75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076\n\n"
             
-            locations_text += "4. Hebbal (North Bangalore - Opening Soon)\n"
+            locations_text += "4. Hebbal (North Bangalore)\n"
             
             return locations_text
         
         # Check for BTM Layout mentions
         if "btm" in message_lower or "btm layout" in message_lower:
             return {
-                "response": "Anthill IQ doesn't have a branch in BTM Layout. Our locations are:\n\n1. Cunningham Road (Central Bangalore)\n2. Arekere (South Bangalore)\n3. Hulimavu (South Bangalore)\n4. Hebbal (Opening Soon)\n\nWould you like to book a workspace at any of these locations?",
+                "response": "Anthill IQ doesn't have a branch in BTM Layout. Our locations are:\n\n1. Cunningham Road (Central Bangalore)\n2. Arekere (South Bangalore)\n3. Hulimavu (South Bangalore)\n4. Hebbal (North Bangalore)\n\nWould you like to book a workspace at any of these locations?",
                 "source": "location_correction",
                 "confidence": 1.0
             }
@@ -213,15 +213,14 @@ class ChatManager:
         # Check for specific location queries (Hebbal)
         if "hebbal" in message_lower:
             return {
-                "response": "Our Hebbal branch is opening soon in North Bangalore. This will be our newest location and will offer all services including private offices, dedicated desks, coworking spaces, and meeting rooms. The exact address will be announced soon.",
-                "source": "specific_location",
-                "confidence": 1.0
+                "response": "Our Hebbal branch is now open in North Bangalore. This location offers all services including private offices, dedicated desks, coworking spaces, and meeting rooms. Would you like to know more about our services or book a tour?",
+                "sources": []
             }
             
         # Check for contact number queries
         if "contact" in message_lower or "number" in message_lower or "phone" in message_lower:
             return {
-                "response": "You can reach Anthill IQ through the following contact information:\n\n• Phone: 9119739119\n• Email: connect@anthilliq.com\n• Website: www.anthilliq.com\n\nOur team is ready to assist you with any inquiries about our workspace solutions at our locations in Bangalore: Cunningham Road, Hulimavu, Arekere, and our upcoming branch in Hebbal.",
+                "response": "You can reach Anthill IQ through the following contact information:\n\n• Phone: 9119739119\n• Email: connect@anthilliq.com\n• Website: www.anthilliq.com\n\nOur team is ready to assist you with any inquiries about our workspace solutions at our locations in Bangalore: Cunningham Road, Hulimavu, Arekere, and Hebbal.",
                 "source": "contact_info",
                 "confidence": 1.0
             }
@@ -289,7 +288,7 @@ class ChatManager:
    • Projectors, screens and whiteboards
    • Half-day and full-day booking options
 
-All our existing locations (Cunningham Road, Hulimavu, and Arekere) offer these services. We're also excited to announce our upcoming branch in Hebbal, opening soon!
+All our locations (Cunningham Road, Hulimavu, Arekere, and Hebbal) offer these services.
 
 For pricing information, please contact us at 9119739119 or email connect@anthilliq.com.""",
                 "source": "service_info",
@@ -309,7 +308,7 @@ For pricing information, please contact us at 9119739119 or email connect@anthil
 • Access to common areas and community events
 • Flexible lease terms
 
-Available at all our existing locations (Cunningham Road, Hulimavu, and Arekere) and soon at our upcoming Hebbal branch.
+Available at all our locations (Cunningham Road, Hulimavu, Arekere, and Hebbal).
 
 For pricing and availability, please contact us at 9119739119.""",
                 "source": "service_specific",
@@ -328,7 +327,7 @@ For pricing and availability, please contact us at 9119739119.""",
 • Day pass and monthly membership options
 • Business address services (for members)
 
-Available at all our existing locations (Cunningham Road, Hulimavu, and Arekere) and soon at our upcoming Hebbal branch.
+Available at all our locations (Cunningham Road, Hulimavu, Arekere, and Hebbal).
 
 For pricing and current promotions, please contact us at 9119739119.""",
                 "source": "service_specific",
@@ -347,7 +346,7 @@ For pricing and current promotions, please contact us at 9119739119.""",
 • Business address services
 • Community membership benefits
 
-Available at all our existing locations (Cunningham Road, Hulimavu, and Arekere) and soon at our upcoming Hebbal branch.
+Available at all our locations (Cunningham Road, Hulimavu, Arekere, and Hebbal).
 
 For pricing and availability, please contact us at 9119739119.""",
                 "source": "service_specific",
@@ -366,7 +365,7 @@ For pricing and availability, please contact us at 9119739119.""",
 • Complimentary tea and coffee
 • Hourly and daily booking options
 
-Available at all our existing locations (Cunningham Road, Hulimavu, and Arekere) and soon at our upcoming Hebbal branch.
+Available at all our locations (Cunningham Road, Hulimavu, Arekere, and Hebbal).
 
 For pricing and availability, please contact us at 9119739119.""",
                 "source": "service_specific",
@@ -385,7 +384,7 @@ For pricing and availability, please contact us at 9119739119.""",
 • Event coordination assistance
 • Evening and weekend availability
 
-Available at all our existing locations (Cunningham Road, Hulimavu, and Arekere) and soon at our upcoming Hebbal branch.
+Available at all our locations (Cunningham Road, Hulimavu, Arekere, and Hebbal).
 
 For pricing, capacity information, and availability, please contact us at 9119739119.""",
                 "source": "service_specific",
@@ -404,7 +403,7 @@ For pricing, capacity information, and availability, please contact us at 911973
 • Refreshment options available
 • Half-day and full-day booking options
 
-Available at all our existing locations (Cunningham Road, Hulimavu, and Arekere) and soon at our upcoming Hebbal branch.
+Available at all our locations (Cunningham Road, Hulimavu, Arekere, and Hebbal).
 
 For pricing, capacity information, and availability, please contact us at 9119739119.""",
                 "source": "service_specific",

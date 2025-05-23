@@ -201,7 +201,7 @@ class BookingHandler:
         for location in locations:
             if location.lower() in message_lower:
                 if location.lower() == "hebbal":
-                    booking_info["preferred_location"] = "Hebbal (Opening Soon)"
+                    booking_info["preferred_location"] = "Hebbal"
                 else:
                     booking_info["preferred_location"] = location.capitalize()
                 break

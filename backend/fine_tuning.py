@@ -94,7 +94,7 @@ Anthill IQ has FOUR locations in Bangalore:
 1. Cunningham Road branch (Central Bangalore)
 2. Hulimavu branch (Bannerghatta Road, South Bangalore)
 3. Arekere branch (Bannerghatta Road, South Bangalore)
-4. Hebbal branch (Opening Soon)
+4. Hebbal branch (North Bangalore)
 
 CONTACT INFORMATION:
 - Phone: 9119739119

@@ -1,0 +1,41 @@
+<!-- Anthill IQ Chatbot Integration Code for Wix -->
+<!-- Method 1: JavaScript Widget (Recommended) -->
+
+<div id="anthill-chatbot-container"></div>
+<script>
+    (function() {
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.async = true;
+        
+        // Replace with your preferred production URL
+        script.src = 'https://anthill-chatbot-ghm916hgr-sreekumar-thorsigniaos-projects.vercel.app/anthill_chatbot_widget.js';
+        
+        var entry = document.getElementsByTagName('script')[0];
+        entry.parentNode.insertBefore(script, entry);
+    })();
+</script>
+
+<!-- 
+Method 2: iFrame Integration (Alternative)
+Copy and paste the following code into an HTML element in Wix:
+
+<iframe 
+    src="https://anthill-chatbot-ghm916hgr-sreekumar-thorsigniaos-projects.vercel.app/iframe.html" 
+    width="400" 
+    height="600" 
+    frameborder="0"
+    style="position: fixed; bottom: 20px; right: 20px; border: none; z-index: 9999;">
+</iframe>
+-->
+
+<!-- 
+How to add this to your Wix website:
+
+1. Go to your Wix website editor
+2. Click the "+" button to add a new element
+3. Search for "HTML iframe" or "Embed" and add it to your page
+4. Click on the newly added element and select "Enter code"
+5. Paste the code above (either Method 1 or Method 2)
+6. Click "Update" and then publish your site
+--> 

@@ -66,7 +66,7 @@ Anthill IQ has FOUR locations in Bangalore:
 1. Cunningham Road branch (Central Bangalore)
 2. Hulimavu branch (Bannerghatta Road, South Bangalore)
 3. Arekere branch (Bannerghatta Road, South Bangalore)
-4. Hebbal branch (Opening Soon)
+4. Hebbal branch (North Bangalore)
 
 CONTACT INFORMATION:
 - Phone: 9119739119
@@ -156,7 +156,7 @@ class handler(BaseHTTPRequestHandler):
                 
                 # Simple responses based on common queries
                 if any(word in message_lower for word in ['location', 'where', 'address', 'branch', 'center']):
-                    response = "Anthill IQ has four locations in Bangalore: Cunningham Road (Central), Hulimavu (Bannerghatta Road), Arekere (Bannerghatta Road), and our upcoming branch in Hebbal. Which location would be most convenient for you?"
+                    response = "We have four locations in Bangalore: Cunningham Road (Central Bangalore), Arekere (South Bangalore), Hulimavu (South Bangalore), and Hebbal (North Bangalore). Which location would be most convenient for you?"
                 elif any(word in message_lower for word in ['price', 'cost', 'fee', 'pricing', 'rate', 'charges']):
                     response = "Our pricing varies based on your specific requirements and the location you choose. I'd be happy to connect you with our team for a personalized quote. Could you tell me which of our services you're most interested in?"
                 elif any(word in message_lower for word in ['contact', 'phone', 'call', 'email', 'reach']):

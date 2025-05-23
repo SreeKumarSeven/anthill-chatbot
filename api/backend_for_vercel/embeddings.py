@@ -63,7 +63,7 @@ class FAQEmbeddingManager:
             },
             {
                 "Question": "Where are your locations?",
-                "Answer": "Anthill IQ has four locations in Bangalore: Cunningham Road (Central Bangalore), Hulimavu (South Bangalore), Arekere (South Bangalore), and our upcoming location in Hebbal (North Bangalore)."
+                "Answer": "Anthill IQ has four locations in Bangalore: Cunningham Road (Central Bangalore), Hulimavu (South Bangalore), Arekere (South Bangalore), and Hebbal (North Bangalore)."
             }
         ]
         print("Using fallback sample FAQs")

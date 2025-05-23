@@ -8,9 +8,17 @@
         "pip": ["openai==0.28.1", "python-dotenv", "requests", "psycopg2-binary"]
       }
     },
+    { 
+      "src": "api/test_openai.py",  
+      "use": "@vercel/python",
+      "config": {
+        "pip": ["openai==0.28.1", "python-dotenv"]
+      }
+    },
     { "src": "public/**/*", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "/api/test", "dest": "api/test_openai.py" },
     { "src": "/api/(.*)", "dest": "api/index.py" },
     { "src": "/(.*)", "dest": "public/$1" }
   ]
