@@ -1,15 +1,25 @@
-# Anthill IQ Chatbot Widget
+# Anthill IQ Chatbot
 
-A customizable chatbot widget for Anthill IQ's Wix website that enables visitor interaction, service inquiries, and appointment booking.
+A conversational AI chatbot for Anthill IQ coworking spaces in Bangalore.
+
+## Locations
+
+Anthill IQ has four locations in Bangalore:
+- Cunningham Road (Central Bangalore) 
+- Arekere (South Bangalore)
+- Hulimavu (South Bangalore)
+- Hebbal (North Bangalore) - Now Open!
 
 ## Features
 
-- **User Registration**: Collects user information before starting the chat
-- **Interactive Booking Flow**: Guides users through selecting location, service, and appointment time
-- **Responsive Design**: Works on desktop and mobile devices
-- **Customizable Styling**: Easily change colors, fonts, and other visual elements
-- **Service Information**: Provides details about available services
-- **Location Information**: Shares information about office locations
+- Information about Anthill IQ services and locations
+- Booking assistance for workspace services
+- Responsive design that works on mobile and desktop devices
+- Embedded widget that can be added to any website
+- Integration with booking and contact systems
+- User registration: Collects user information before starting the chat
+- Interactive booking flow: Guides users through selecting location, service, and appointment time
+- Customizable styling: Easily change colors, fonts, and other visual elements
 
 ## Installation on Wix
 
