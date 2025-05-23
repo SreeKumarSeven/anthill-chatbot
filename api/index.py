@@ -97,6 +97,39 @@ def debug_log(message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[DEBUG {timestamp}] {message}")
 
+def fix_hebbal_references(text):
+    """
+    Post-process text to ensure Hebbal is described as open, not upcoming
+    This is a safety measure in case the AI still mentions Hebbal as 'opening soon'
+    """
+    # Common patterns to search for and replace
+    replacements = [
+        ("our newest branch opening soon in Hebbal", "our newest branch in Hebbal"),
+        ("our newest branch in Hebbal (opening soon)", "our newest branch in Hebbal"),
+        ("Hebbal (opening soon)", "Hebbal"),
+        ("Hebbal branch (opening soon)", "Hebbal branch"),
+        ("Hebbal (North Bangalore - opening soon)", "Hebbal (North Bangalore)"),
+        ("Hebbal (North Bangalore - Opening Soon)", "Hebbal (North Bangalore)"),
+        ("upcoming branch in Hebbal", "branch in Hebbal"),
+        ("upcoming Hebbal branch", "Hebbal branch"),
+        ("opening soon in Hebbal", "now open in Hebbal"),
+        ("Hebbal, opening soon", "Hebbal, which is now open"),
+        ("Hebbal branch is opening soon", "Hebbal branch is now open"),
+        ("Hebbal branch will be opening soon", "Hebbal branch is now open"),
+        ("set to open soon", "now open")
+    ]
+    
+    # Apply all replacements
+    result = text
+    for old, new in replacements:
+        result = result.replace(old, new)
+    
+    # Check if replacements were made
+    if result != text:
+        debug_log("Fixed Hebbal references in response")
+    
+    return result
+
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
@@ -170,6 +203,9 @@ class handler(BaseHTTPRequestHandler):
                 else:
                     response = "Thank you for reaching out to Anthill IQ. We offer premium workspace solutions across Bangalore. Could you please let me know what you're looking for so I can better assist you?"
                 
+                # Apply post-processing to fix any references to Hebbal
+                response = fix_hebbal_references(response)
+                
                 result = {
                     "response": response,
                     "source": "fallback",
@@ -199,6 +235,10 @@ class handler(BaseHTTPRequestHandler):
                 
                 debug_log("OpenAI response received successfully")
                 bot_response = response.choices[0].message.content
+                
+                # Post-process to fix any remaining Hebbal references
+                bot_response = fix_hebbal_references(bot_response)
+                
                 debug_log(f"Bot response (first 50 chars): {bot_response[:50]}...")
                 
                 # Log conversation to database if available
