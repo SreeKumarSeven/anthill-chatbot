@@ -66,7 +66,7 @@ Anthill IQ has FOUR locations in Bangalore:
 1. Cunningham Road branch (Central Bangalore)
 2. Hulimavu branch (Bannerghatta Road, South Bangalore)
 3. Arekere branch (Bannerghatta Road, South Bangalore)
-4. Hebbal branch (North Bangalore) - NOW OPEN (NOT "opening soon" or "upcoming")
+4. Hebbal branch (North Bangalore) - NOW FULLY OPEN AND OPERATIONAL (NOT "opening soon" or "upcoming")
 
 CONTACT INFORMATION:
 - Phone: 9119739119
@@ -79,7 +79,7 @@ IMPORTANT GUIDELINES:
 4. When asked about locations, keep the format simple and clear
 5. Don't provide specific pricing - suggest contacting us
 6. Make sure your responses sound like a real conversation
-7. VERY IMPORTANT: ALWAYS state that the Hebbal branch is OPEN, NOT "opening soon" or "upcoming"
+7. EXTREMELY IMPORTANT: The Hebbal branch is NOW OPEN AND FULLY OPERATIONAL - NEVER say it is "opening soon", "upcoming", or anything suggesting it is not already open
 8. If asked about Hebbal location, explicitly state "Our Hebbal branch is OPEN and fully operational"
 """
 
@@ -231,7 +231,7 @@ class handler(BaseHTTPRequestHandler):
             
             # SPECIAL CASE: Direct handling for Hebbal branch queries
             message_lower = message.lower()
-            if 'hebbal' in message_lower and any(word in message_lower for word in ['branch', 'location', 'open', 'new']):
+            if 'hebbal' in message_lower:
                 hebbal_response = "Our Hebbal branch is NOW OPEN in North Bangalore. This is our newest fully operational location and offers all services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?"
                 
                 result = {
