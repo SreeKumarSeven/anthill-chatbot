@@ -213,8 +213,9 @@ class ChatManager:
         # Check for specific location queries (Hebbal)
         if "hebbal" in message_lower:
             return {
-                "response": "Our Hebbal branch is now open in North Bangalore. This location offers all services including private offices, dedicated desks, coworking spaces, and meeting rooms. Would you like to know more about our services or book a tour?",
-                "sources": []
+                "response": "Our Hebbal branch is NOW OPEN in North Bangalore. This is our newest fully operational location and offers all services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?",
+                "source": "specific_location",
+                "confidence": 1.0
             }
             
         # Check for contact number queries
