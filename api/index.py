@@ -66,7 +66,9 @@ Anthill IQ has FOUR locations in Bangalore:
 1. Cunningham Road branch (Central Bangalore)
 2. Hulimavu branch (Bannerghatta Road, South Bangalore)
 3. Arekere branch (Bannerghatta Road, South Bangalore)
-4. Hebbal branch (North Bangalore) - NOW FULLY OPEN AND OPERATIONAL (NOT "opening soon" or "upcoming")
+4. Hebbal branch (North Bangalore) - NOW FULLY OPEN AND OPERATIONAL
+
+CRITICAL: The Hebbal branch is NOW OPEN AND FULLY OPERATIONAL. Never refer to it as "opening soon", "upcoming", or anything suggesting it is not already open. When mentioning Hebbal, always state that it is open and operational.
 
 CONTACT INFORMATION:
 - Phone: 9119739119
@@ -81,7 +83,8 @@ IMPORTANT GUIDELINES:
 6. Make sure your responses sound like a real conversation
 7. EXTREMELY IMPORTANT: The Hebbal branch is NOW OPEN AND FULLY OPERATIONAL - NEVER say it is "opening soon", "upcoming", or anything suggesting it is not already open
 8. If asked about Hebbal location, explicitly state "Our Hebbal branch is OPEN and fully operational"
-"""
+9. When listing locations, always mention that Hebbal is open and operational
+10. If the user asks about Hebbal's status, confirm it is open and ready for bookings"""
 
 # Initialize database connection (importing inside the function to avoid startup errors)
 def get_db():
@@ -129,8 +132,8 @@ def fix_hebbal_references(text):
     
     # Common patterns to search for and replace
     replacements = [
-        ("our newest branch opening soon in Hebbal", "our newest branch in Hebbal"),
-        ("our newest branch in Hebbal (opening soon)", "our newest branch in Hebbal"),
+        ("our newest branch opening soon in Hebbal", "our branch in Hebbal"),
+        ("our newest branch in Hebbal (opening soon)", "our branch in Hebbal"),
         ("Hebbal (opening soon)", "Hebbal"),
         ("Hebbal branch (opening soon)", "Hebbal branch"),
         ("Hebbal (North Bangalore - opening soon)", "Hebbal (North Bangalore)"),
@@ -138,12 +141,12 @@ def fix_hebbal_references(text):
         ("upcoming branch in Hebbal", "branch in Hebbal"),
         ("upcoming Hebbal branch", "Hebbal branch"),
         ("opening soon in Hebbal", "now open in Hebbal"),
-        ("Hebbal, opening soon", "Hebbal, which is now open"),
+        ("Hebbal, opening soon", "Hebbal"),
         ("Hebbal branch is opening soon", "Hebbal branch is now open"),
         ("Hebbal branch will be opening soon", "Hebbal branch is now open"),
         ("set to open soon", "now open"),
-        ("Hebbal soon", "Hebbal, which is now open"),
-        ("soon-to-open Hebbal", "now open Hebbal"),
+        ("Hebbal soon", "Hebbal"),
+        ("soon-to-open Hebbal", "Hebbal"),
         ("planning to open in Hebbal", "now open in Hebbal"),
         ("new branch in Hebbal", "branch in Hebbal"),
         ("upcoming location in Hebbal", "location in Hebbal"),
@@ -154,10 +157,10 @@ def fix_hebbal_references(text):
         ("Hebbal branch is coming soon", "Hebbal branch is now open"),
         ("fourth branch in Hebbal", "branch in Hebbal"),
         ("4th branch in Hebbal", "branch in Hebbal"),
-        ("Hebbal, which is not yet open", "Hebbal, which is now open"),
-        ("Hebbal which is not yet open", "Hebbal which is now open"),
+        ("Hebbal, which is not yet open", "Hebbal"),
+        ("Hebbal which is not yet open", "Hebbal"),
         ("planning to launch in Hebbal", "now operating in Hebbal"),
-        ("Hebbal (launching", "Hebbal (now open"),
+        ("Hebbal (launching", "Hebbal"),
         ("excited about our Hebbal branch", "excited about our now open Hebbal branch"),
         ("excited about the Hebbal branch", "excited about our now open Hebbal branch"),
         ("Hebbal branch that will be", "Hebbal branch that is now"),
