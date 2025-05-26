@@ -584,86 +584,27 @@ Our spaces are designed to create an ecosystem where professionals, startups, an
     async def handle_message(self, message, conversation_id=None, user_id=None):
         """Handle incoming message and generate appropriate response."""
         try:
-            message_lower = message.lower()
-            
-            # Check identity queries first
-            identity_info = self.preprocess_identity_query(message)
-            if identity_info:
-                self.log_conversation(message, identity_info["response"], identity_info["source"], user_id)
-                return {
-                    "response": identity_info["response"],
-                    "conversation_id": conversation_id
-                }
-                
             # Check if message is about a non-Anthill IQ topic
             non_anthill_keywords = ["wework", "bhive", "91springboard", "awfis", "cowrks", "innov8", "indiqube", "smartworks"]
+            message_lower = message.lower()
+            
             if any(keyword in message_lower for keyword in non_anthill_keywords):
                 return {
                     "response": "I'm specialized in providing information about Anthill IQ's coworking spaces and services. I don't have detailed information about other coworking providers.",
                     "conversation_id": conversation_id
                 }
             
-            # Check if message is a booking request
-            is_booking = self.is_booking_request(message)
-            if is_booking:
-                booking_info = self.extract_booking_info(message)
-                return {
-                    "response": "I'd be happy to help you book a space at Anthill IQ! Please provide the following details:\n\n" +
-                               "1. Your name\n2. Phone number\n3. Email address\n4. Preferred location (Cunningham Road, Arekere, Hulimavu, or Hebbal)\n" +
-                               "5. Number of seats needed\n6. Date and time\n\nAlternatively, you can use our booking form for a smoother experience.",
-                    "is_booking": True,
-                    "booking_info": booking_info,
-                    "conversation_id": conversation_id
-                }
-            
-            # Check if message is a social media query
-            social_media_response = self.preprocess_social_media_query(message)
-            if social_media_response:
-                return {
-                    "response": social_media_response["response"],
-                    "conversation_id": conversation_id
-                }
-            
-            # Check if message is a location query
-            location_info = self.preprocess_location_query(message)
-            if location_info:
-                self.log_conversation(message, location_info["response"], location_info["source"], user_id)
-                return {
-                    "response": location_info["response"],
-                    "conversation_id": conversation_id
-                }
-            
-            # Check if message is a service inquiry
-            service_info = self.preprocess_service_inquiry(message)
-            if service_info:
-                self.log_conversation(message, service_info["response"], service_info["source"], user_id)
-                return {
-                    "response": service_info["response"],
-                    "conversation_id": conversation_id
-                }
-            
-            # Check if message is a pricing inquiry
-            pricing_info = self.preprocess_pricing_query(message)
-            if pricing_info:
-                self.log_conversation(message, pricing_info["response"], pricing_info["source"], user_id)
-                return {
-                    "response": pricing_info["response"],
-                    "conversation_id": conversation_id
-                }
-            
-            # If no specific handler matched, use GPT response
+            # Use OpenAI for all other responses
             gpt_response = await self.get_gpt_response(message)
             
-            # If GPT response indicates it doesn't know, add a note about specialization
-            if "don't know" in gpt_response.lower() or "don't have" in gpt_response.lower() or "no information" in gpt_response.lower():
-                gpt_response += "\n\nI specialize in providing information about Anthill IQ's coworking spaces, services, locations, and booking procedures. If you have any questions about these topics, I'd be happy to help!"
-            
+            # Log the conversation
             self.log_conversation(message, gpt_response, "openai", user_id)
             
             return {
                 "response": gpt_response,
                 "conversation_id": conversation_id
             }
+            
         except Exception as e:
             logging.error(f"Error handling message: {str(e)}")
             return {
