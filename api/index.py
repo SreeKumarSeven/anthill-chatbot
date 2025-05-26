@@ -1,7 +1,8 @@
 """
 Minimal API handler for Vercel deployment
 """
-from http.server import BaseHTTPRequestHandler
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import json
 import os
 from datetime import datetime
@@ -9,17 +10,18 @@ from dotenv import load_dotenv
 import openai
 import requests
 import re
-from flask import request, jsonify
 
 # Load environment variables
 load_dotenv()
 
-# Set API key - with direct fallback option
+app = Flask(__name__)
+CORS(app)
+
+# Set API key
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
-    # Try alternative environment variable names
     OPENAI_API_KEY = os.getenv("OPENAI_KEY")
-    
+
 # Force print for debugging
 print(f"------------ CRITICAL DEBUG INFO ------------")
 print(f"OpenAI API Key: {OPENAI_API_KEY[:5] + '...' if OPENAI_API_KEY else 'None'}")
@@ -27,7 +29,7 @@ print(f"OpenAI API Key length: {len(OPENAI_API_KEY) if OPENAI_API_KEY else 0}")
 print(f"OpenAI API Key available: {bool(OPENAI_API_KEY)}")
 print(f"-------------------------------------------")
 
-# Initialize OpenAI - use a more direct approach
+# Initialize OpenAI
 openai.api_key = OPENAI_API_KEY
 print(f"OpenAI configuration: API version {openai.__version__}, Key set: {bool(OPENAI_API_KEY)}")
 
@@ -179,228 +181,79 @@ def fix_hebbal_references(text):
     
     return result
 
-class handler(BaseHTTPRequestHandler):
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type")
-        self.end_headers()
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.json
+        message = data.get('message')
+        user_id = data.get('user_id', 'anonymous')
+        session_id = data.get('session_id')
         
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        
-        response = {
-            "status": "online",
-            "service": "Anthill IQ Chatbot API",
-            "openai_key": bool(OPENAI_API_KEY)
-        }
-        
-        self.wfile.write(json.dumps(response).encode())
-        
-    def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
-        post_data = self.rfile.read(content_length)
-        
+        if not message:
+            return jsonify({"error": "Message cannot be empty"}), 400
+            
+        # Process the chat message with OpenAI
         try:
-            data = json.loads(post_data.decode('utf-8'))
-            path = self.path.lower()
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": SYSTEM_MESSAGE},
+                    {"role": "user", "content": message}
+                ],
+                temperature=0.7,
+                max_tokens=500
+            )
             
-            if path == '/api/chat':
-                self._handle_chat(data)
-            elif path == '/api/register-user':
-                self._handle_register_user(data)
-            elif path == '/api/register':
-                self._handle_register(data)
-            else:
-                self._send_json_response(404, {"error": "Not found"})
-                
-        except Exception as e:
-            self._send_json_response(500, {"error": str(e)})
+            bot_response = response.choices[0].message.content
             
-    def _handle_chat(self, data):
-        if not data.get('message'):
-            self._send_json_response(400, {"error": "Message cannot be empty"})
-            return
-            
-        try:
-            message = data.get('message')
-            user_id = data.get('user_id', 'anonymous')
-            session_id = data.get('session_id', None)
-            
-            debug_log(f"Received chat request. Message: '{message[:30]}...', User: {user_id}, Session: {session_id}")
-            
-            # SPECIAL CASE: Direct handling for Hebbal branch queries
-            message_lower = message.lower()
-            if 'hebbal' in message_lower:
-                hebbal_response = "Our Hebbal branch is NOW OPEN in North Bangalore. This is our newest fully operational location and offers all services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?"
-                
-                result = {
-                    "response": hebbal_response,
-                    "source": "direct_handler",
-                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-                }
-                
-                self._send_json_response(200, result)
-                return
-            
-            # EMERGENCY FALLBACK - Respond directly if OpenAI is not available
-            if not OPENAI_API_KEY:
-                debug_log("⚠️ EMERGENCY MODE: OpenAI API key not found - using hardcoded responses")
-                
-                # Basic keyword matching for emergency responses
-                message_lower = message.lower()
-                
-                # Simple responses based on common queries
-                if any(word in message_lower for word in ['location', 'where', 'address', 'branch', 'center']):
-                    response = "We have four locations in Bangalore: Cunningham Road (Central Bangalore), Arekere (South Bangalore), Hulimavu (South Bangalore), and Hebbal (North Bangalore). Which location would be most convenient for you?"
-                elif any(word in message_lower for word in ['price', 'cost', 'fee', 'pricing', 'rate', 'charges']):
-                    response = "Our pricing varies based on your specific requirements and the location you choose. I'd be happy to connect you with our team for a personalized quote. Could you tell me which of our services you're most interested in?"
-                elif any(word in message_lower for word in ['contact', 'phone', 'call', 'email', 'reach']):
-                    response = "You can reach our team at 9119739119 or email us at connect@anthilliq.com. Would you like me to arrange for someone to contact you directly?"
-                elif any(word in message_lower for word in ['service', 'offer', 'workspace', 'amenities']):
-                    response = "We offer private offices, coworking spaces, dedicated desks, meeting rooms, event spaces, and training rooms. All our locations have high-speed internet, ergonomic furniture, 24/7 security, refreshments, and printing services. What type of workspace are you looking for?"
-                elif 'hello' in message_lower or 'hi' in message_lower.split() or 'hey' in message_lower:
-                    response = "Hello there! Welcome to Anthill IQ - Bangalore's premium coworking space. How can I assist you today?"
-                else:
-                    response = "Thank you for reaching out to Anthill IQ. We offer premium workspace solutions across Bangalore. Could you please let me know what you're looking for so I can better assist you?"
-                
-                # Apply post-processing to fix any references to Hebbal
-                response = fix_hebbal_references(response)
-                
-                result = {
-                    "response": response,
-                    "source": "fallback",
-                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-                }
-                
-                self._send_json_response(200, result)
-                return
-            
-            # Process the chat message with OpenAI
-            debug_log(f"Sending message to OpenAI: {message[:50]}...")
-            try:
-                # Ensure API key is set for this request
-                openai.api_key = OPENAI_API_KEY
-                
-                # NEW: Simplified direct API request using the legacy client
-                debug_log("Using legacy OpenAI client (v0.28.1)")
-                response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": SYSTEM_MESSAGE},
-                        {"role": "user", "content": message}
-                    ],
-                    temperature=0.7,
-                    max_tokens=500
-                )
-                
-                debug_log("OpenAI response received successfully")
-                bot_response = response.choices[0].message.content
-                
-                # Post-process to fix any remaining Hebbal references
-                bot_response = fix_hebbal_references(bot_response)
-                
-                debug_log(f"Bot response (first 50 chars): {bot_response[:50]}...")
-                
-                # Log conversation to database if available
-                db = get_db()
-                if db:
-                    db.log_conversation(message, bot_response, "openai", user_id)
-                
-                result = {
-                    "response": bot_response,
-                    "source": "openai",
-                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-                }
-                
-                self._send_json_response(200, result)
-                
-            except Exception as e:
-                error_detail = str(e)
-                debug_log(f"Error from OpenAI API: {error_detail}")
-                self._send_json_response(500, {
-                    "response": f"I'm sorry, there was an error processing your message. Error: {error_detail}",
-                    "source": "error",
-                    "session_id": session_id or "new_session"
-                })
-                return
+            return jsonify({
+                "response": bot_response,
+                "source": "openai",
+                "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            })
             
         except Exception as e:
-            error_detail = str(e)
-            debug_log(f"General error in _handle_chat: {error_detail}")
-            self._send_json_response(500, {"error": error_detail})
+            return jsonify({
+                "error": f"Error processing message: {str(e)}"
+            }), 500
             
-    def _handle_register_user(self, data):
-        try:
-            name = data.get('name')
-            phone = data.get('phone')
-            email = data.get('email', '')
-            session_id = data.get('session_id', None)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    try:
+        data = request.json
+        name = data.get('name')
+        phone = data.get('phone')
+        
+        if not name or not phone:
+            return jsonify({'error': 'Name and phone are required'}), 400
             
-            if not name or not phone:
-                self._send_json_response(400, {"error": "Name and phone are required"})
-                return
-                
-            # Generate user_id and session_id if not provided
-            user_id = "user_" + name.lower().replace(" ", "_")
-            if not session_id:
-                session_id = "session_" + name.lower().replace(" ", "_")
-                
-            # Store user data in database if available
-            db = get_db()
-            if db:
-                db.log_user_registration(name, phone, email, 'chatbot_widget', session_id)
-                
-            response = {
-                "status": "success",
-                "message": "User registration successful",
-                "user_id": user_id,
-                "session_id": session_id
-            }
+        # Validate phone number format
+        if not re.match(r'^\+?[\d\s-]{10,}$', phone):
+            return jsonify({'error': 'Invalid phone number format'}), 400
             
-            self._send_json_response(200, response)
-            
-        except Exception as e:
-            self._send_json_response(500, {"error": str(e)})
-    
-    def _handle_register(self, data):
-        try:
-            name = data.get('name')
-            phone = data.get('phone')
-            
-            if not name or not phone:
-                self._send_json_response(400, {"error": "Name and phone are required"})
-                return
-            
-            # Validate phone number format
-            if not re.match(r'^\+?[\d\s-]{10,}$', phone):
-                self._send_json_response(400, {"error": "Invalid phone number format"})
-                return
-            
-            # Save user registration
-            db = get_db()
-            if db:
-                user_id = db.save_user_registration(name, phone)
-                
-            response = {
-                "success": True,
-                "user_id": user_id,
-                "message": "Registration successful"
-            }
-            
-            self._send_json_response(200, response)
-            
-        except Exception as e:
-            print(f"Error in registration: {str(e)}")
-            self._send_json_response(500, {"error": "Registration failed"})
-    
-    def _send_json_response(self, status_code, data):
-        self.send_response(status_code)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode()) 
+        # Generate user ID (you can modify this as needed)
+        user_id = f"user_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        
+        return jsonify({
+            'success': True,
+            'user_id': user_id,
+            'message': 'Registration successful'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/')
+def home():
+    return jsonify({
+        "status": "online",
+        "service": "Anthill IQ Chatbot API",
+        "openai_key": bool(OPENAI_API_KEY)
+    })
+
+# For local development
+if __name__ == '__main__':
+    app.run(debug=True) 

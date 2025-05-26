@@ -3,19 +3,23 @@
   "builds": [
     { 
       "src": "api/index.py", 
-      "use": "@vercel/python"
-    },
-    { 
-      "src": "api/test_openai.py",  
       "use": "@vercel/python",
       "config": {
-        "pip": ["openai==0.28.1", "python-dotenv"]
+        "runtime": "python3.9",
+        "pip": [
+          "flask==2.3.3",
+          "flask-cors==4.0.0",
+          "python-dotenv==1.0.0",
+          "openai==1.3.5",
+          "requests==2.31.0",
+          "sqlalchemy==2.0.23",
+          "psycopg2-binary==2.9.9"
+        ]
       }
     },
     { "src": "public/**/*", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/test", "dest": "api/test_openai.py" },
     { "src": "/api/(.*)", "dest": "api/index.py" },
     { "src": "/(.*)", "dest": "public/$1" }
   ],
