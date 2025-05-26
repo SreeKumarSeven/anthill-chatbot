@@ -198,13 +198,10 @@ class BookingHandler:
                 break
                 
         # Try to identify the location
-        locations = ["cunningham", "arekere", "hulimavu", "hebbal"]
+        locations = ["cunningham", "arekere", "hulimavu"]
         for location in locations:
             if location.lower() in message_lower:
-                if location.lower() == "hebbal":
-                    booking_info["preferred_location"] = "Hebbal"
-                else:
-                    booking_info["preferred_location"] = location.capitalize()
+                booking_info["preferred_location"] = location.capitalize()
                 break
                 
         # Try to extract number of seats
@@ -360,3 +357,21 @@ class BookingHandler:
             return count > 1
         
         return False 
+
+def validate_booking_info(booking_info):
+    """Validate booking information"""
+    locations = ["cunningham", "arekere", "hulimavu"]
+    
+    location = booking_info.get("preferred_location", "").lower()
+    if location and location not in locations:
+        return False, "Invalid location selected"
+    
+    if location:
+        if location == "cunningham":
+            booking_info["preferred_location"] = "Cunningham Road"
+        elif location == "arekere":
+            booking_info["preferred_location"] = "Arekere"
+        elif location == "hulimavu":
+            booking_info["preferred_location"] = "Hulimavu"
+    
+    # ... rest of the function remains the same ... 

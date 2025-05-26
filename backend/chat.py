@@ -11,6 +11,26 @@ import logging
 # Load environment variables from .env file
 load_dotenv()
 
+LOCATIONS = """Anthill IQ has three locations in Bangalore:
+1. Cunningham Road (Central Bangalore)
+2. Hulimavu (South Bangalore)
+3. Arekere (South Bangalore)"""
+
+LOCATIONS_DETAILED = """Here are our locations in Bangalore:
+1. Cunningham Road
+   Central Bangalore
+2. Hulimavu
+   South Bangalore
+3. Arekere
+   South Bangalore"""
+
+LOCATIONS_WITH_DETAILS = """Anthill IQ has three locations in Bangalore:
+1. Cunningham Road (Central Bangalore)
+2. Hulimavu (South Bangalore)
+3. Arekere (South Bangalore)
+
+Which location would you like to know more about?"""
+
 class ChatManager:
     def __init__(self):
         openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -115,32 +135,11 @@ class ChatManager:
         
         # Format simple location list - NO directions
         def format_simple_locations():
-            return """Anthill IQ has four locations in Bangalore, all of which are fully operational and ready to serve you:
-
-1. Cunningham Road (Central Bangalore)
-2. Arekere (South Bangalore)
-3. Hulimavu (South Bangalore)
-4. Hebbal (North Bangalore)
-
-All our centers are open and offer the complete range of services including private offices, dedicated desks, coworking spaces, and meeting rooms. Would you like to know more about any specific location?"""
+            return LOCATIONS_WITH_DETAILS
             
         # Format detailed location addresses - ONLY NAMES and ADDRESSES
         def format_detailed_addresses():
-            return """Here are all our fully operational Anthill IQ locations:
-
-1. Cunningham Road
-1st Floor, Anthill IQ, 20, Cunningham Rd, Vasanth Nagar, Bengaluru, Karnataka 560052
-
-2. Arekere
-224, Bannerghatta Rd, near Arekere Gate, Arekere, Bengaluru, Karnataka 560076
-
-3. Hulimavu
-75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076
-
-4. Hebbal
-Hebbal, North Bangalore
-
-All locations are open and ready for immediate bookings. Would you like to schedule a visit to any of these centers?"""
+            return LOCATIONS_DETAILED
         
         # Check for BTM Layout mentions
         if "btm" in message_lower or "btm layout" in message_lower:
@@ -442,17 +441,7 @@ For pricing, capacity information, and availability, please contact us at 911973
             if pattern in message_lower:
                 # Pricing response
                 return {
-                    "response": """Thank you for your interest in our pricing!
-
-Our pricing varies based on location, service type, and duration. Each of our branches (Cunningham Road, Arekere, Hulimavu, and Hebbal) offers customized packages designed to meet your specific needs.
-
-For detailed pricing information, please contact us directly:
-• Phone: 9119739119
-• Email: connect@anthilliq.com
-
-Our team will be happy to provide you with current rates and help you find the perfect solution for your requirements. We often have special promotions and flexible packages available.
-
-Would you like me to help you connect with our team for pricing details?""",
+                    "response": get_pricing_response(),
                     "source": "pricing_info",
                     "confidence": 1.0
                 }
@@ -487,43 +476,7 @@ Would you like me to help you connect with our team for pricing details?""",
         """Get a response from OpenAI's API"""
         try:
             # Enhanced system message with more personality and conversation guidance
-            system_message = """You are the Anthill IQ virtual assistant, designed to provide helpful, friendly, and detailed information about Anthill IQ's premium coworking spaces in Bangalore.
-
-CRITICAL LOCATION INFORMATION - READ THIS FIRST:
-Anthill IQ has FOUR locations in Bangalore, ALL of which are OPEN AND OPERATIONAL:
-1. Cunningham Road branch (Central Bangalore)
-2. Hulimavu branch (Bannerghatta Road, South Bangalore)
-3. Arekere branch (Bannerghatta Road, South Bangalore)
-4. Hebbal branch (North Bangalore) - NOW FULLY OPEN AND OPERATIONAL
-
-IMPORTANT: The Hebbal branch is NOW OPEN AND FULLY OPERATIONAL. Never refer to it as "opening soon", "upcoming", or anything suggesting it is not already open. When mentioning Hebbal, always state that it is open and operational.
-
-Your personality traits:
-- Friendly and warm, like a helpful concierge
-- Professional but conversational in tone
-- Enthusiastic about Anthill IQ's offerings
-- Knowledgeable about workspaces and coworking benefits
-- Proactive in providing relevant information and asking follow-up questions
-
-CONVERSATIONAL GUIDELINES:
-1. Always acknowledge the user's question before answering
-2. Be detailed but concise in your responses
-3. Use a friendly, conversational tone with some personality
-4. End responses with a related follow-up question to continue the conversation
-5. Personalize responses when possible using information from the conversation
-6. If you don't know something, admit it but offer to help in another way
-7. When listing locations, ALWAYS state that ALL locations are open and operational
-8. For Hebbal specifically, always mention it is NOW OPEN and fully operational
-9. Never use phrases like "upcoming", "opening soon", or "new branch" for Hebbal
-
-RESPONSE FORMAT:
-- Use natural paragraphs rather than bullet points when possible
-- Include relevant emojis occasionally to add personality
-- When mentioning locations, always specify which branch you're referring to
-- Add follow-up questions at the end of your responses
-- When listing all locations, always state that ALL locations are open and operational
-
-Remember: you are having a conversation, not just providing information. Make the user feel valued and understood."""
+            system_message = SYSTEM_MESSAGE
 
             # Get response from OpenAI with enhanced system message
             response = self.client.chat.completions.create(
@@ -700,3 +653,68 @@ Remember: you are having a conversation, not just providing information. Make th
                 "response": "I'm sorry, I'm having trouble processing your request. Please try again later.",
                 "source": "error"
             }
+
+def get_location_response(message_lower):
+    """Handle location-specific queries"""
+    if any(loc in message_lower for loc in ["cunningham", "hulimavu", "arekere"]):
+        return {
+            "response": "All our locations are fully operational and offer our complete range of services. Would you like to know more about our services or schedule a visit?",
+            "context": "location"
+        }
+
+    return {
+        "response": f"{LOCATIONS}\n\nAll our locations are fully operational and offer our complete range of services. Would you like to know more about any specific location?",
+        "context": "location"
+    }
+
+SYSTEM_MESSAGE = """You are the Anthill IQ Assistant, helping users with information about our coworking spaces in Bangalore.
+
+Key Information:
+1. We have three locations:
+   - Cunningham Road (Central Bangalore)
+   - Hulimavu (South Bangalore)
+   - Arekere (South Bangalore)
+
+2. All locations are fully operational and offer:
+   - Private Offices
+   - Dedicated Desks
+   - Coworking Spaces
+   - Meeting Rooms
+   - Event Spaces
+
+3. Our services are available at all locations:
+   - 24/7 Access
+   - High-speed Internet
+   - Meeting Room Credits
+   - Printing & Scanning
+   - Mail & Package Handling
+   - Housekeeping
+   - Unlimited Tea/Coffee
+
+4. For pricing and availability:
+   - Varies by location and service type
+   - Customized packages available
+   - Contact us for current offers
+
+Guidelines:
+1. Be friendly and professional
+2. All locations are fully operational
+3. Encourage visitors to schedule tours
+4. Provide location-specific details when asked
+5. Direct pricing queries to our team
+6. Highlight amenities and benefits
+7. Focus on convenience and flexibility
+
+Remember to:
+1. Always be accurate about our locations
+2. Encourage in-person visits
+3. Highlight the benefits of each location
+4. Mention our 24/7 access and amenities
+5. Direct specific pricing questions to our team"""
+
+def get_service_response(service_type):
+    base_response = f"This service is available at all our locations (Cunningham Road, Hulimavu, and Arekere)."
+    # ... rest of the function remains the same ...
+
+def get_pricing_response():
+    return "Our pricing varies based on location, service type, and duration. Each of our branches (Cunningham Road, Arekere, and Hulimavu) offers customized packages designed to meet your specific needs. Would you like to schedule a consultation to discuss pricing options for a specific location?"
