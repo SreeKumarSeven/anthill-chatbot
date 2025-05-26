@@ -98,10 +98,24 @@
             background-color: #228512;
         }
         
+        /* Chat container styling */
+        #chat-container {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+        }
+        
+        #chat-container.active {
+            display: flex;
+        }
+        
         /* Registration form styling */
         .registration-form {
             padding: 20px;
             background-color: white;
+            height: calc(100% - 40px); /* Account for padding */
+            overflow-y: auto;
         }
         
         .form-group {
@@ -153,7 +167,7 @@
             <button id="register-button" class="submit-button">Start Chat</button>
         </div>
         
-        <div id="chat-container" style="display: none; height: 100%; display: flex; flex-direction: column;">
+        <div id="chat-container" style="display: none; height: 100%;">
             <div class="chatbot-messages" id="messages">
                 <!-- Messages will be added here dynamically -->
             </div>
@@ -292,12 +306,18 @@
                     userId = data.user_id;
                     sessionId = Date.now().toString();
                     
-                    // Hide registration form and show chat
+                    // Hide registration form
                     registrationContainer.style.display = 'none';
+                    
+                    // Show chat container
                     chatContainer.style.display = 'flex';
+                    chatContainer.classList.add('active');
                     
                     // Add welcome message
                     addBotMessage(`Welcome ${name}! How can I assist you today?`);
+                    
+                    // Focus on input
+                    messageInput.focus();
                 } else {
                     alert(data.error || 'Registration failed. Please try again.');
                 }
