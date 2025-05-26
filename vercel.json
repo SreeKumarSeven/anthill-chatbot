@@ -3,10 +3,7 @@
   "builds": [
     { 
       "src": "api/index.py", 
-      "use": "@vercel/python",
-      "config": {
-        "pip": ["openai==0.28.1", "python-dotenv", "requests", "psycopg2-binary"]
-      }
+      "use": "@vercel/python"
     },
     { 
       "src": "api/test_openai.py",  
@@ -21,5 +18,8 @@
     { "src": "/api/test", "dest": "api/test_openai.py" },
     { "src": "/api/(.*)", "dest": "api/index.py" },
     { "src": "/(.*)", "dest": "public/$1" }
-  ]
+  ],
+  "env": {
+    "PYTHONPATH": "."
+  }
 } 
