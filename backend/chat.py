@@ -11,32 +11,6 @@ import logging
 # Load environment variables from .env file
 load_dotenv()
 
-LOCATIONS = """Anthill IQ has four locations in Bangalore:
-1. Cunningham Road (Central Bangalore)
-2. Hulimavu (South Bangalore)
-3. Arekere (South Bangalore)
-4. Hebbal (North Bangalore)"""
-
-LOCATIONS_DETAILED = """Here are our locations in Bangalore:
-1. Cunningham Road
-   1st Floor, Anthill IQ, 20, Cunningham Rd, Vasanth Nagar, Bengaluru, Karnataka 560052
-2. Hulimavu
-   75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076
-3. Arekere
-   224, Bannerghatta Rd, near Arekere Gate, Arekere, Bengaluru, Karnataka 560076
-4. Hebbal
-   AnthillIQ Workspaces, 44/2A, Kodigehalli gate, Sahakarnagar post, Hebbal, Bengaluru, Karnataka 560092"""
-
-LOCATIONS_WITH_DETAILS = """Anthill IQ has four locations in Bangalore:
-1. Cunningham Road (Central Bangalore)
-   1st Floor, Anthill IQ, 20, Cunningham Rd, Vasanth Nagar, Bengaluru, Karnataka 560052
-2. Hulimavu (South Bangalore)
-   75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076
-3. Arekere (South Bangalore)
-   224, Bannerghatta Rd, near Arekere Gate, Arekere, Bengaluru, Karnataka 560076
-4. Hebbal (North Bangalore)
-   AnthillIQ Workspaces, 44/2A, Kodigehalli gate, Sahakarnagar post, Hebbal, Bengaluru, Karnataka 560092"""
-
 class ChatManager:
     def __init__(self):
         openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -141,23 +115,38 @@ class ChatManager:
         
         # Format simple location list - NO directions
         def format_simple_locations():
-            return LOCATIONS_WITH_DETAILS
+            locations_text = "Anthill IQ has locations at:\n\n"
+            
+            locations_text += "1. Cunningham Road (Central Bangalore)\n"
+            locations_text += "2. Arekere (South Bangalore)\n"
+            locations_text += "3. Hulimavu (South Bangalore)\n"
+            locations_text += "4. Hebbal (North Bangalore)\n\n"
+            
+            locations_text += "You can select any of these locations when booking through our website or this chatbot."
+            
+            return locations_text
             
         # Format detailed location addresses - ONLY NAMES and ADDRESSES
         def format_detailed_addresses():
-            return LOCATIONS_DETAILED
+            locations_text = "Anthill IQ Workspace Locations:\n\n"
+            
+            locations_text += "1. Cunningham Road\n"
+            locations_text += "1st Floor, Anthill IQ, 20, Cunningham Rd, Vasanth Nagar, Bengaluru, Karnataka 560052\n\n"
+            
+            locations_text += "2. Arekere\n"
+            locations_text += "224, Bannerghatta Rd, near Arekere Gate, Arekere, Bengaluru, Karnataka 560076\n\n"
+            
+            locations_text += "3. Hulimavu\n"
+            locations_text += "75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076\n\n"
+            
+            locations_text += "4. Hebbal (North Bangalore)\n"
+            
+            return locations_text
         
         # Check for BTM Layout mentions
         if "btm" in message_lower or "btm layout" in message_lower:
             return {
-                "response": """Anthill IQ doesn't have a branch in BTM Layout. Our fully operational locations are:
-
-1. Cunningham Road (Central Bangalore)
-2. Arekere (South Bangalore)
-3. Hulimavu (South Bangalore)
-4. Hebbal (North Bangalore)
-
-All our centers are open and ready to serve you. Would you like to know more about any of these locations?""",
+                "response": "Anthill IQ doesn't have a branch in BTM Layout. Our locations are:\n\n1. Cunningham Road (Central Bangalore)\n2. Arekere (South Bangalore)\n3. Hulimavu (South Bangalore)\n4. Hebbal (North Bangalore)\n\nWould you like to book a workspace at any of these locations?",
                 "source": "location_correction",
                 "confidence": 1.0
             }
@@ -224,7 +213,7 @@ All our centers are open and ready to serve you. Would you like to know more abo
         # Check for specific location queries (Hebbal)
         if "hebbal" in message_lower:
             return {
-                "response": "Our Hebbal branch is now fully operational in North Bangalore. This location offers all our services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?",
+                "response": "Our Hebbal branch is NOW OPEN in North Bangalore. This is our newest fully operational location and offers all services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?",
                 "source": "specific_location",
                 "confidence": 1.0
             }
@@ -447,7 +436,17 @@ For pricing, capacity information, and availability, please contact us at 911973
             if pattern in message_lower:
                 # Pricing response
                 return {
-                    "response": get_pricing_response(),
+                    "response": """Thank you for your interest in our pricing!
+
+Our pricing varies based on location, service type, and duration. Each of our branches (Cunningham Road, Arekere, Hulimavu, and Hebbal) offers customized packages designed to meet your specific needs.
+
+For detailed pricing information, please contact us directly:
+• Phone: 9119739119
+• Email: connect@anthilliq.com
+
+Our team will be happy to provide you with current rates and help you find the perfect solution for your requirements. We often have special promotions and flexible packages available.
+
+Would you like me to help you connect with our team for pricing details?""",
                     "source": "pricing_info",
                     "confidence": 1.0
                 }
@@ -478,52 +477,40 @@ For pricing, capacity information, and availability, please contact us at 911973
         
         return None
 
-    def preprocess_identity_query(self, message: str) -> Optional[Dict]:
-        """Handle queries about the chatbot's identity and Anthill IQ"""
-        message_lower = message.lower()
-        
-        identity_patterns = [
-            'who are you',
-            'what are you',
-            'are you a bot',
-            'are you human',
-            'are you ai',
-            'what is anthill',
-            'what is anthill iq',
-            'tell me about anthill',
-            'what does anthill mean',
-            'meaning of anthill',
-            'about anthill'
-        ]
-        
-        if any(pattern in message_lower for pattern in identity_patterns):
-            return {
-                "response": """I am the Anthill IQ Assistant, your dedicated guide to our premium coworking spaces in Bangalore. 
-
-Anthill IQ is Bangalore's premium coworking space provider, offering intelligent workspace solutions that foster productivity, creativity, and community. The name represents our core values:
-- "Anthill": A collaborative and industrious community working together
-- "IQ": Intelligence in workspace solutions and smart amenities
-
-We provide premium workspace solutions including:
-• Private Offices
-• Dedicated Desks
-• Coworking Spaces
-• Meeting Rooms
-• Event Spaces
-• Training Rooms
-
-Our spaces are designed to create an ecosystem where professionals, startups, and enterprises can thrive together. Would you like to know more about our services or locations?""",
-                "source": "identity_info",
-                "confidence": 1.0
-            }
-        
-        return None
-
     async def get_gpt_response(self, message: str) -> str:
         """Get a response from OpenAI's API"""
         try:
             # Enhanced system message with more personality and conversation guidance
-            system_message = SYSTEM_MESSAGE
+            system_message = """You are the Anthill IQ virtual assistant, designed to provide helpful, friendly, and detailed information about Anthill IQ's premium coworking spaces in Bangalore.
+
+Your personality traits:
+- Friendly and warm, like a helpful concierge
+- Professional but conversational in tone
+- Enthusiastic about Anthill IQ's offerings
+- Knowledgeable about workspaces and coworking benefits
+- Proactive in providing relevant information and asking follow-up questions
+
+IMPORTANT INFORMATION:
+- Anthill IQ has FOUR locations: Cunningham Road (Central Bangalore), Hulimavu (Bannerghatta Road), Arekere (Bannerghatta Road), and our branch in Hebbal
+- We offer private offices, coworking spaces, dedicated desks, meeting rooms, event spaces, and virtual office services
+- All locations feature high-speed internet, 24/7 security, professional meeting spaces, and community events
+- Our contact: Phone: 9119739119, Email: connect@anthilliq.com
+
+CONVERSATIONAL GUIDELINES:
+1. Always acknowledge the user's question before answering
+2. Be detailed but concise in your responses
+3. Use a friendly, conversational tone with some personality
+4. End responses with a related follow-up question to continue the conversation
+5. Personalize responses when possible using information from the conversation
+6. If you don't know something, admit it but offer to help in another way
+
+RESPONSE FORMAT:
+- Use natural paragraphs rather than bullet points when possible
+- Include relevant emojis occasionally to add personality
+- When mentioning locations, always specify which branch you're referring to
+- Add follow-up questions at the end of your responses
+
+Remember: you are having a conversation, not just providing information. Make the user feel valued and understood."""
 
             # Get response from OpenAI with enhanced system message
             response = self.client.chat.completions.create(
@@ -536,46 +523,7 @@ Our spaces are designed to create an ecosystem where professionals, startups, an
                 max_tokens=500
             )
             
-            # Post-process the response to ensure Hebbal is shown as open
-            bot_response = response.choices[0].message.content
-            
-            # Fix any remaining references to Hebbal being upcoming
-            hebbal_fixes = [
-                ("upcoming branch in Hebbal", "branch in Hebbal"),
-                ("opening soon in Hebbal", "now open in Hebbal"),
-                ("new branch in Hebbal", "branch in Hebbal"),
-                ("Hebbal (opening soon)", "Hebbal"),
-                ("Hebbal branch (opening soon)", "Hebbal branch"),
-                ("Hebbal branch is opening soon", "Hebbal branch is now open"),
-                ("Hebbal branch will be opening soon", "Hebbal branch is now open"),
-                ("set to open soon", "now open"),
-                ("Hebbal soon", "Hebbal"),
-                ("soon-to-open Hebbal", "Hebbal"),
-                ("planning to open in Hebbal", "now open in Hebbal"),
-                ("upcoming location in Hebbal", "location in Hebbal"),
-                ("Hebbal location will soon be", "Hebbal location is now"),
-                ("new Hebbal branch", "Hebbal branch"),
-                ("Hebbal branch is not yet open", "Hebbal branch is now open"),
-                ("Hebbal branch isn't open yet", "Hebbal branch is now open"),
-                ("Hebbal branch is coming soon", "Hebbal branch is now open"),
-                ("fourth branch in Hebbal", "branch in Hebbal"),
-                ("4th branch in Hebbal", "branch in Hebbal"),
-                ("Hebbal, which is not yet open", "Hebbal"),
-                ("Hebbal which is not yet open", "Hebbal"),
-                ("planning to launch in Hebbal", "now operating in Hebbal"),
-                ("Hebbal (launching", "Hebbal"),
-                ("excited about our Hebbal branch", "excited about our now open Hebbal branch"),
-                ("excited about the Hebbal branch", "excited about our now open Hebbal branch"),
-                ("Hebbal branch that will be", "Hebbal branch that is now"),
-                ("Hebbal branch, which will be", "Hebbal branch, which is now"),
-                ("we're really excited about", "we're really excited that it's now open. Would you like to know more about"),
-                ("we're excited about", "we're excited that it's now open. Would you like to know more about")
-            ]
-            
-            for old, new in hebbal_fixes:
-                bot_response = bot_response.replace(old, new)
-            
-            return bot_response
+            return response.choices[0].message.content
             
         except Exception as e:
             print(f"Error in get_gpt_response: {str(e)}")
@@ -594,17 +542,67 @@ Our spaces are designed to create an ecosystem where professionals, startups, an
                     "conversation_id": conversation_id
                 }
             
-            # Use OpenAI for all other responses
+            # Check if message is a booking request
+            is_booking = self.is_booking_request(message)
+            if is_booking:
+                booking_info = self.extract_booking_info(message)
+                return {
+                    "response": "I'd be happy to help you book a space at Anthill IQ! Please provide the following details:\n\n" +
+                               "1. Your name\n2. Phone number\n3. Email address\n4. Preferred location (Cunningham Road, Arekere, Hulimavu, or Hebbal)\n" +
+                               "5. Number of seats needed\n6. Date and time\n\nAlternatively, you can use our booking form for a smoother experience.",
+                    "is_booking": True,
+                    "booking_info": booking_info,
+                    "conversation_id": conversation_id
+                }
+            
+            # Check if message is a social media query
+            social_media_response = self.preprocess_social_media_query(message)
+            if social_media_response:
+                return {
+                    "response": social_media_response["response"],
+                    "conversation_id": conversation_id
+                }
+            
+            # Check if message is a location query
+            location_info = self.preprocess_location_query(message)
+            if location_info:
+                self.log_conversation(message, location_info["response"], location_info["source"], user_id)
+                return {
+                    "response": location_info["response"],
+                    "conversation_id": conversation_id
+                }
+            
+            # Check if message is a service inquiry
+            service_info = self.preprocess_service_inquiry(message)
+            if service_info:
+                self.log_conversation(message, service_info["response"], service_info["source"], user_id)
+                return {
+                    "response": service_info["response"],
+                    "conversation_id": conversation_id
+                }
+            
+            # Check if message is a pricing inquiry
+            pricing_info = self.preprocess_pricing_query(message)
+            if pricing_info:
+                self.log_conversation(message, pricing_info["response"], pricing_info["source"], user_id)
+                return {
+                    "response": pricing_info["response"],
+                    "conversation_id": conversation_id
+                }
+            
+            # If no specific handler matched, use GPT response
             gpt_response = await self.get_gpt_response(message)
             
-            # Log the conversation
+            # If GPT response indicates it doesn't know, add a note about specialization
+            if "don't know" in gpt_response.lower() or "don't have" in gpt_response.lower() or "no information" in gpt_response.lower():
+                gpt_response += "\n\nI specialize in providing information about Anthill IQ's coworking spaces, services, locations, and booking procedures. If you have any questions about these topics, I'd be happy to help!"
+            
             self.log_conversation(message, gpt_response, "openai", user_id)
             
             return {
                 "response": gpt_response,
                 "conversation_id": conversation_id
             }
-            
         except Exception as e:
             logging.error(f"Error handling message: {str(e)}")
             return {
@@ -650,69 +648,3 @@ Our spaces are designed to create an ecosystem where professionals, startups, an
                 "response": "I'm sorry, I'm having trouble processing your request. Please try again later.",
                 "source": "error"
             }
-
-def get_location_response(message_lower):
-    """Handle location-specific queries"""
-    if any(loc in message_lower for loc in ["cunningham", "hulimavu", "arekere"]):
-        return {
-            "response": "All our locations are fully operational and offer our complete range of services. Would you like to know more about our services or schedule a visit?",
-            "context": "location"
-        }
-
-    return {
-        "response": f"{LOCATIONS}\n\nAll our locations are fully operational and offer our complete range of services. Would you like to know more about any specific location?",
-        "context": "location"
-    }
-
-SYSTEM_MESSAGE = """You are the Anthill IQ Assistant, helping users with information about our coworking spaces in Bangalore.
-
-Key Information:
-1. We have four locations:
-   - Cunningham Road (Central Bangalore)
-   - Hulimavu (South Bangalore)
-   - Arekere (South Bangalore)
-   - Hebbal (North Bangalore)
-
-2. All locations are fully operational and offer:
-   - Private Offices
-   - Dedicated Desks
-   - Coworking Spaces
-   - Meeting Rooms
-   - Event Spaces
-
-3. Our services are available at all locations:
-   - 24/7 Access
-   - High-speed Internet
-   - Meeting Room Credits
-   - Printing & Scanning
-   - Mail & Package Handling
-   - Housekeeping
-   - Unlimited Tea/Coffee
-
-4. For pricing and availability:
-   - Varies by location and service type
-   - Customized packages available
-   - Contact us for current offers
-
-Guidelines:
-1. Be friendly and professional
-2. All locations are fully operational
-3. Encourage visitors to schedule tours
-4. Provide location-specific details when asked
-5. Direct pricing queries to our team
-6. Highlight amenities and benefits
-7. Focus on convenience and flexibility
-
-Remember to:
-1. Always be accurate about our locations
-2. Encourage in-person visits
-3. Highlight the benefits of each location
-4. Mention our 24/7 access and amenities
-5. Direct specific pricing questions to our team"""
-
-def get_service_response(service_type):
-    base_response = f"This service is available at all our locations (Cunningham Road, Hulimavu, and Arekere)."
-    # ... rest of the function remains the same ...
-
-def get_pricing_response():
-    return "Our pricing varies based on location, service type, and duration. Each of our branches (Cunningham Road, Arekere, and Hulimavu) offers customized packages designed to meet your specific needs. Would you like to schedule a consultation to discuss pricing options for a specific location?"

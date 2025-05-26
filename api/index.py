@@ -30,79 +30,63 @@ openai.api_key = OPENAI_API_KEY
 print(f"OpenAI configuration: API version {openai.__version__}, Key set: {bool(OPENAI_API_KEY)}")
 
 # System message for Anthill IQ context
-SYSTEM_MESSAGE = """You are the Anthill IQ Assistant, helping users with information about our coworking spaces in Bangalore.
+SYSTEM_MESSAGE = """You are the voice assistant for Anthill IQ, a premium coworking space brand in Bangalore. 
 
-About Anthill IQ:
-Anthill IQ is Bangalore's premium coworking space provider, offering intelligent workspace solutions that foster productivity, creativity, and community. The name represents our core values:
-- "Anthill": A collaborative and industrious community working together
-- "IQ": Intelligence in workspace solutions and smart amenities
+CRITICAL LOCATION INFORMATION - READ THIS FIRST:
+Anthill IQ has FOUR locations in Bangalore, ALL of which are OPEN AND OPERATIONAL:
+1. Cunningham Road branch (Central Bangalore)
+2. Hulimavu branch (Bannerghatta Road, South Bangalore)
+3. Arekere branch (Bannerghatta Road, South Bangalore)
+4. Hebbal branch (North Bangalore) - NOW FULLY OPEN AND OPERATIONAL
 
-Key Information:
-1. We have four locations:
-   - Cunningham Road (Central Bangalore)
-     1st Floor, Anthill IQ, 20, Cunningham Rd, Vasanth Nagar, Bengaluru, Karnataka 560052
-   - Hulimavu (South Bangalore)
-     75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076
-   - Arekere (South Bangalore)
-     224, Bannerghatta Rd, near Arekere Gate, Arekere, Bengaluru, Karnataka 560076
-   - Hebbal (North Bangalore)
-     AnthillIQ Workspaces, 44/2A, Kodigehalli gate, Sahakarnagar post, Hebbal, Bengaluru, Karnataka 560092
+IMPORTANT: The Hebbal branch is NOW OPEN AND FULLY OPERATIONAL. Never refer to it as "opening soon", "upcoming", or anything suggesting it is not already open. When mentioning Hebbal, always state that it is open and operational.
 
-2. Our Services (available at all locations):
-   - Private Offices: Dedicated spaces for teams
-   - Dedicated Desks: Fixed workstations in shared environment
-   - Coworking Spaces: Flexible hot desks
-   - Meeting Rooms: Professional meeting spaces
-   - Event Spaces: Venues for corporate events
-   - Training Rooms: Equipped for workshops
+YOUR PERSONALITY:
+You are exceptionally warm, friendly, and conversational - like a real person having a genuine conversation. You should sound natural, never robotic or formal. You're passionate about helping people find the perfect workspace and you truly care about their needs. Use a variety of sentence structures, occasional casual phrases, and natural conversational flow just like a real person would.
 
-3. Premium Amenities:
-   - 24/7 Access
-   - High-speed Internet
-   - Meeting Room Credits
-   - Printing & Scanning
-   - Mail & Package Handling
-   - Housekeeping
-   - Unlimited Tea/Coffee
-   - Community Events
-   - Business Address Services
+CONVERSATIONAL APPROACH:
+- Always acknowledge what the user has said and respond directly to their specific query
+- Use natural conversation markers like "Well," "Actually," "You know," "I'd say," etc. occasionally
+- Ask meaningful follow-up questions that build on what the user has shared
+- Show personality in your responses with occasional light humor where appropriate
+- Avoid corporate-sounding language and speak like a helpful friend
+- When someone asks about locations, be straightforward and give clear, simple directions
+- Keep your responses concise but complete - don't be unnecessarily wordy
 
-4. Pricing Overview:
-   - Private Offices: From ₹12,000 per seat/month
-   - Dedicated Desks: From ₹8,000 per seat/month
-   - Coworking Space: From ₹6,000 per seat/month
-   - Meeting Rooms: From ₹800 per hour
-   - Day Pass: From ₹500 per day
+ANTHILL IQ SERVICES:
+Anthill IQ offers these workspace solutions at all locations:
+1. Private Office Space - Dedicated offices for teams
+2. Coworking Space - Flexible workspace with hot desks
+3. Dedicated Desk - Reserved desk with storage
+4. Meeting Rooms - Professional meeting spaces bookable by the hour
+5. Event Spaces - Venues for corporate events
+6. Training Rooms - Spaces for workshops and training
 
-Contact Information:
+KEY AMENITIES:
+- High-speed internet
+- Ergonomic furniture
+- 24/7 security and access for members
+- Coffee, tea, and refreshments
+- Printing and scanning services
+- Community events
+
+CONTACT INFORMATION:
 - Phone: 9119739119
 - Email: connect@anthilliq.com
-- Website: www.anthilliq.com
 
-Guidelines for Responses:
-1. Be friendly, professional, and enthusiastic
-2. Provide specific, accurate information
-3. Encourage workspace visits and tours
-4. Highlight relevant amenities for each query
-5. Mention nearby landmarks when discussing locations
-6. Emphasize community and networking opportunities
-7. Always offer to provide more specific information
-
-Remember:
-1. All locations are fully operational
-2. Each location has its unique advantages
-3. Flexible packages are available
-4. Community is a key focus
-5. We cater to individuals, startups, and enterprises"""
-
-LOCATIONS = """Anthill IQ has four locations in Bangalore:
-1. Cunningham Road (Central Bangalore)
-2. Hulimavu (South Bangalore)
-3. Arekere (South Bangalore)
-4. Hebbal (North Bangalore)"""
-
-def get_location_response():
-    return f"{LOCATIONS}\n\nAll our locations are fully operational and offer our complete range of services. Would you like to know more about any specific location?"
+IMPORTANT GUIDELINES:
+1. NEVER confirm the existence of a BTM Layout branch - Anthill IQ does NOT have a location there
+2. Always end with a natural-sounding question to continue the conversation
+3. Speak like a real person, not a corporate voice
+4. When asked about locations, keep the format simple and clear
+5. Don't provide specific pricing - suggest contacting us
+6. Make sure your responses sound like a real conversation
+7. EXTREMELY IMPORTANT: The Hebbal branch is NOW OPEN AND FULLY OPERATIONAL - NEVER say it is "opening soon", "upcoming", or anything suggesting it is not already open
+8. If asked about Hebbal location, explicitly state "Our Hebbal branch is OPEN and fully operational"
+9. When listing locations, always mention that Hebbal is open and operational
+10. If the user asks about Hebbal's status, confirm it is open and ready for bookings
+11. For any Hebbal-related queries, always emphasize that it is NOW OPEN and ready for immediate bookings
+12. When listing all locations, always state that ALL locations are open and operational"""
 
 # Initialize database connection (importing inside the function to avoid startup errors)
 def get_db():
@@ -124,79 +108,79 @@ def fix_hebbal_references(text):
     Post-process text to ensure Hebbal is described as open, not upcoming
     This is a safety measure in case the AI still mentions Hebbal as 'opening soon'
     """
-    if not text:
-        return text
+    # First, check if the text contains any mention of Hebbal
+    if 'hebbal' in text.lower():
+        # If it contains phrases indicating it's not open, replace the entire sentence
+        lower_text = text.lower()
         
-    # First check if this is a location-related response
-    location_keywords = ['location', 'where', 'branch', 'branches', 'center', 'centers', 'office', 'offices']
-    is_location_response = any(keyword in text.lower() for keyword in location_keywords)
+        # Check for problematic phrases
+        problematic_phrases = [
+            "opening soon", "will be opening", "upcoming", "not yet open", 
+            "isn't open yet", "is not open yet", "coming soon", "launching soon",
+            "will open", "about to open", "planned", "in the works", "preparing to open"
+        ]
+        
+        # If any problematic phrase is found near "hebbal", apply more aggressive replacement
+        for phrase in problematic_phrases:
+            if phrase in lower_text and abs(lower_text.find(phrase) - lower_text.find("hebbal")) < 100:
+                # Find the sentence containing both Hebbal and the problematic phrase
+                sentences = text.split('.')
+                for i, sentence in enumerate(sentences):
+                    if 'hebbal' in sentence.lower() and any(p in sentence.lower() for p in problematic_phrases):
+                        sentences[i] = "Our Hebbal branch is NOW OPEN in North Bangalore."
+                
+                # Reconstruct the text
+                text = '.'.join(sentences)
     
-    # If it's a location response or mentions any of our locations, use the standardized response
-    if is_location_response or any(loc in text.lower() for loc in ['cunningham', 'hulimavu', 'arekere', 'hebbal']):
-        return """Anthill IQ has four locations in Bangalore:
-
-1. Cunningham Road (Central Bangalore)
-   1st Floor, Anthill IQ, 20, Cunningham Rd, Vasanth Nagar, Bengaluru, Karnataka 560052
-2. Hulimavu (South Bangalore)
-   75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076
-3. Arekere (South Bangalore)
-   224, Bannerghatta Rd, near Arekere Gate, Arekere, Bengaluru, Karnataka 560076
-4. Hebbal (North Bangalore)
-   AnthillIQ Workspaces, 44/2A, Kodigehalli gate, Sahakarnagar post, Hebbal, Bengaluru, Karnataka 560092
-
-All our centers are open and offer the complete range of services including private offices, dedicated desks, coworking spaces, and meeting rooms. Would you like to know more about any specific location?"""
+    # Common patterns to search for and replace
+    replacements = [
+        ("our newest branch opening soon in Hebbal", "our branch in Hebbal"),
+        ("our newest branch in Hebbal (opening soon)", "our branch in Hebbal"),
+        ("Hebbal (opening soon)", "Hebbal"),
+        ("Hebbal branch (opening soon)", "Hebbal branch"),
+        ("Hebbal (North Bangalore - opening soon)", "Hebbal (North Bangalore)"),
+        ("Hebbal (North Bangalore - Opening Soon)", "Hebbal (North Bangalore)"),
+        ("upcoming branch in Hebbal", "branch in Hebbal"),
+        ("upcoming Hebbal branch", "Hebbal branch"),
+        ("opening soon in Hebbal", "now open in Hebbal"),
+        ("Hebbal, opening soon", "Hebbal"),
+        ("Hebbal branch is opening soon", "Hebbal branch is now open"),
+        ("Hebbal branch will be opening soon", "Hebbal branch is now open"),
+        ("set to open soon", "now open"),
+        ("Hebbal soon", "Hebbal"),
+        ("soon-to-open Hebbal", "Hebbal"),
+        ("planning to open in Hebbal", "now open in Hebbal"),
+        ("new branch in Hebbal", "branch in Hebbal"),
+        ("upcoming location in Hebbal", "location in Hebbal"),
+        ("Hebbal location will soon be", "Hebbal location is now"),
+        ("new Hebbal branch", "Hebbal branch"),
+        ("Hebbal branch is not yet open", "Hebbal branch is now open"),
+        ("Hebbal branch isn't open yet", "Hebbal branch is now open"),
+        ("Hebbal branch is coming soon", "Hebbal branch is now open"),
+        ("fourth branch in Hebbal", "branch in Hebbal"),
+        ("4th branch in Hebbal", "branch in Hebbal"),
+        ("Hebbal, which is not yet open", "Hebbal"),
+        ("Hebbal which is not yet open", "Hebbal"),
+        ("planning to launch in Hebbal", "now operating in Hebbal"),
+        ("Hebbal (launching", "Hebbal"),
+        ("excited about our Hebbal branch", "excited about our now open Hebbal branch"),
+        ("excited about the Hebbal branch", "excited about our now open Hebbal branch"),
+        ("Hebbal branch that will be", "Hebbal branch that is now"),
+        ("Hebbal branch, which will be", "Hebbal branch, which is now"),
+        ("we're really excited about", "we're really excited that it's now open. Would you like to know more about"),
+        ("we're excited about", "we're excited that it's now open. Would you like to know more about")
+    ]
     
-    return text
-
-# Add specific handling for "what is Anthill IQ" queries
-def is_about_anthill_query(message_lower):
-    about_keywords = [
-        'what is anthill',
-        'what is anthill iq',
-        'what does anthill',
-        'tell me about anthill',
-        'about anthill iq',
-        'meaning of anthill',
-        'who is anthill',
-        'what anthill'
-    ]
-    return any(keyword in message_lower for keyword in about_keywords)
-
-# Add identity query detection
-def is_identity_query(message_lower):
-    """Check if the message is asking about the chatbot's identity or Anthill IQ"""
-    identity_patterns = [
-        'who are you',
-        'what are you',
-        'are you a bot',
-        'are you human',
-        'are you ai',
-        'what is anthill',
-        'what is anthill iq',
-        'tell me about anthill',
-        'what does anthill mean',
-        'meaning of anthill',
-        'about anthill'
-    ]
-    return any(pattern in message_lower for pattern in identity_patterns)
-
-def get_identity_response():
-    """Get response for identity queries"""
-    return """I am the Anthill IQ Assistant, your dedicated guide to our premium coworking spaces in Bangalore. 
-
-Anthill IQ is Bangalore's premium coworking space provider, offering intelligent workspace solutions that foster productivity, creativity, and community. The name represents our core values:
-- "Anthill": A collaborative and industrious community working together
-- "IQ": Intelligence in workspace solutions and smart amenities
-
-We provide premium workspace solutions including:
-• Private Offices
-• Dedicated Desks
-• Coworking Spaces
-• Meeting Rooms
-• Event Spaces
-• Training Rooms
-
-Our spaces are designed to create an ecosystem where professionals, startups, and enterprises can thrive together. Would you like to know more about our services or locations?"""
+    # Apply all replacements
+    result = text
+    for old, new in replacements:
+        result = result.replace(old, new)
+    
+    # Check if replacements were made
+    if result != text:
+        debug_log("Fixed Hebbal references in response")
+    
+    return result
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -245,19 +229,80 @@ class handler(BaseHTTPRequestHandler):
             
         try:
             message = data.get('message')
-            message_lower = message.lower()
             user_id = data.get('user_id', 'anonymous')
             session_id = data.get('session_id', None)
             
             debug_log(f"Received chat request. Message: '{message[:30]}...', User: {user_id}, Session: {session_id}")
             
-            # Process all messages with OpenAI
+            # SPECIAL CASE: Direct handling for location queries
+            message_lower = message.lower()
+            location_keywords = ['location', 'where', 'branch', 'branches', 'centers', 'places', 'areas']
+            if any(word in message_lower for word in location_keywords):
+                location_response = "Anthill IQ has four locations in Bangalore, all of which are open and operational:\n\n1. Cunningham Road (Central Bangalore)\n2. Hulimavu (South Bangalore)\n3. Arekere (South Bangalore)\n4. Hebbal (North Bangalore) - Now fully operational\n\nWhich location would be most convenient for you?"
+                
+                result = {
+                    "response": location_response,
+                    "source": "direct_handler",
+                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                }
+                
+                self._send_json_response(200, result)
+                return
+            
+            # SPECIAL CASE: Direct handling for Hebbal branch queries
+            if 'hebbal' in message_lower:
+                hebbal_response = "Our Hebbal branch is now fully operational in North Bangalore. This location offers all our services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?"
+                
+                result = {
+                    "response": hebbal_response,
+                    "source": "direct_handler",
+                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                }
+                
+                self._send_json_response(200, result)
+                return
+            
+            # EMERGENCY FALLBACK - Respond directly if OpenAI is not available
+            if not OPENAI_API_KEY:
+                debug_log("⚠️ EMERGENCY MODE: OpenAI API key not found - using hardcoded responses")
+                
+                # Basic keyword matching for emergency responses
+                message_lower = message.lower()
+                
+                # Simple responses based on common queries
+                if any(word in message_lower for word in ['location', 'where', 'address', 'branch', 'center']):
+                    response = "We have four locations in Bangalore: Cunningham Road (Central Bangalore), Arekere (South Bangalore), Hulimavu (South Bangalore), and Hebbal (North Bangalore). Which location would be most convenient for you?"
+                elif any(word in message_lower for word in ['price', 'cost', 'fee', 'pricing', 'rate', 'charges']):
+                    response = "Our pricing varies based on your specific requirements and the location you choose. I'd be happy to connect you with our team for a personalized quote. Could you tell me which of our services you're most interested in?"
+                elif any(word in message_lower for word in ['contact', 'phone', 'call', 'email', 'reach']):
+                    response = "You can reach our team at 9119739119 or email us at connect@anthilliq.com. Would you like me to arrange for someone to contact you directly?"
+                elif any(word in message_lower for word in ['service', 'offer', 'workspace', 'amenities']):
+                    response = "We offer private offices, coworking spaces, dedicated desks, meeting rooms, event spaces, and training rooms. All our locations have high-speed internet, ergonomic furniture, 24/7 security, refreshments, and printing services. What type of workspace are you looking for?"
+                elif 'hello' in message_lower or 'hi' in message_lower.split() or 'hey' in message_lower:
+                    response = "Hello there! Welcome to Anthill IQ - Bangalore's premium coworking space. How can I assist you today?"
+                else:
+                    response = "Thank you for reaching out to Anthill IQ. We offer premium workspace solutions across Bangalore. Could you please let me know what you're looking for so I can better assist you?"
+                
+                # Apply post-processing to fix any references to Hebbal
+                response = fix_hebbal_references(response)
+                
+                result = {
+                    "response": response,
+                    "source": "fallback",
+                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                }
+                
+                self._send_json_response(200, result)
+                return
+            
+            # Process the chat message with OpenAI
+            debug_log(f"Sending message to OpenAI: {message[:50]}...")
             try:
                 # Ensure API key is set for this request
                 openai.api_key = OPENAI_API_KEY
                 
-                # Use OpenAI for all responses
-                debug_log("Using OpenAI for response generation")
+                # NEW: Simplified direct API request using the legacy client
+                debug_log("Using legacy OpenAI client (v0.28.1)")
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=[
