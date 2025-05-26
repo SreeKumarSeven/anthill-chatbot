@@ -203,30 +203,40 @@
         function fixHebbalReferences(text) {
             if (!text) return text;
             
-            // If text contains Hebbal and any phrase indicating it's not open yet
             const lowerText = text.toLowerCase();
+            
+            // First, check for any location-related queries
+            const locationKeywords = ['location', 'where', 'branch', 'branches', 'center', 'centers', 'office'];
+            const isLocationQuery = locationKeywords.some(keyword => lowerText.includes(keyword));
+            
+            // If it's a location query, always return the standardized response
+            if (isLocationQuery) {
+                return "Anthill IQ has four locations in Bangalore, all of which are open and operational:\n\n1. Cunningham Road (Central Bangalore)\n2. Hulimavu (South Bangalore)\n3. Arekere (South Bangalore)\n4. Hebbal (North Bangalore) - Now fully operational\n\nWhich location would you like to know more about?";
+            }
+            
+            // If text contains Hebbal, check for any phrases suggesting it's not open
             if (lowerText.includes('hebbal')) {
                 const notOpenPhrases = [
                     'opening soon', 'will be opening', 'upcoming', 'not yet open',
                     'isn\'t open yet', 'is not open yet', 'coming soon', 'launching soon',
                     'will open', 'about to open', 'planned', 'in the works', 'preparing to open',
-                    'soon in hebbal', 'new branch', 'newest branch', 'excited about', 'looking forward to'
+                    'soon in hebbal', 'new branch', 'newest branch', 'excited about', 'looking forward to',
+                    'opening in', 'will be in', 'coming to', 'launching in', 'soon to be in',
+                    'future location', 'future branch', 'planning to open', 'going to open',
+                    'upcoming location', 'next branch', 'next location'
                 ];
                 
-                // If any phrase is found, replace the entire text
+                // If any of these phrases are found near "hebbal", replace the entire response
                 for (const phrase of notOpenPhrases) {
-                    if (lowerText.includes(phrase) && Math.abs(lowerText.indexOf(phrase) - lowerText.indexOf('hebbal')) < 100) {
-                        return "Anthill IQ has four locations in Bangalore, all of which are open and operational:\n\n1. Cunningham Road (Central Bangalore)\n2. Hulimavu (South Bangalore)\n3. Arekere (South Bangalore)\n4. Hebbal (North Bangalore) - Now fully operational\n\nWhich location would you like to know more about?";
+                    if (lowerText.includes(phrase)) {
+                        return "Our Hebbal branch is now fully operational in North Bangalore. This location offers all our services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?";
                     }
                 }
             }
             
-            // Also check for general location queries
-            if (lowerText.includes('location') || lowerText.includes('where') || lowerText.includes('branch')) {
-                const locationPhrases = ['our locations', 'anthill locations', 'where are you', 'which locations', 'which branches'];
-                if (locationPhrases.some(phrase => lowerText.includes(phrase))) {
-                    return "Anthill IQ has four locations in Bangalore, all of which are open and operational:\n\n1. Cunningham Road (Central Bangalore)\n2. Hulimavu (South Bangalore)\n3. Arekere (South Bangalore)\n4. Hebbal (North Bangalore) - Now fully operational\n\nWhich location would you like to know more about?";
-                }
+            // Additional check for responses that list locations
+            if (lowerText.includes('cunningham') && lowerText.includes('hulimavu') && lowerText.includes('arekere')) {
+                return "Anthill IQ has four locations in Bangalore, all of which are open and operational:\n\n1. Cunningham Road (Central Bangalore)\n2. Hulimavu (South Bangalore)\n3. Arekere (South Bangalore)\n4. Hebbal (North Bangalore) - Now fully operational\n\nWhich location would you like to know more about?";
             }
             
             return text;
