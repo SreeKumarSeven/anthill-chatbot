@@ -148,6 +148,20 @@ All our centers are open and offer the complete range of services including priv
     
     return text
 
+# Add specific handling for "what is Anthill IQ" queries
+def is_about_anthill_query(message_lower):
+    about_keywords = [
+        'what is anthill',
+        'what is anthill iq',
+        'what does anthill',
+        'tell me about anthill',
+        'about anthill iq',
+        'meaning of anthill',
+        'who is anthill',
+        'what anthill'
+    ]
+    return any(keyword in message_lower for keyword in about_keywords)
+
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
@@ -195,13 +209,42 @@ class handler(BaseHTTPRequestHandler):
             
         try:
             message = data.get('message')
+            message_lower = message.lower()
             user_id = data.get('user_id', 'anonymous')
             session_id = data.get('session_id', None)
             
             debug_log(f"Received chat request. Message: '{message[:30]}...', User: {user_id}, Session: {session_id}")
             
+            # SPECIAL CASE: Handle "what is Anthill IQ" queries first
+            if is_about_anthill_query(message_lower):
+                about_response = """Anthill IQ is Bangalore's premium coworking space provider, offering intelligent workspace solutions that foster productivity, creativity, and community. 
+
+The name "Anthill IQ" represents our core values:
+- "Anthill": A collaborative and industrious community working together, like a thriving ecosystem
+- "IQ": Intelligence in workspace solutions and smart amenities that enhance productivity
+
+We provide:
+• Premium Coworking Spaces
+• Private Offices
+• Dedicated Desks
+• Meeting Rooms
+• Event Spaces
+• Training Rooms
+
+Our spaces are designed to create an ecosystem where professionals, startups, and enterprises can thrive together. We focus on building a community that encourages collaboration, networking, and growth.
+
+Would you like to know more about our locations or services?"""
+                
+                result = {
+                    "response": about_response,
+                    "source": "direct_handler",
+                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                }
+                
+                self._send_json_response(200, result)
+                return
+            
             # SPECIAL CASE: Direct handling for location queries
-            message_lower = message.lower()
             location_keywords = ['location', 'where', 'branch', 'branches', 'centers', 'places', 'areas']
             
             # Only trigger location response if it's specifically asking about locations
