@@ -115,39 +115,44 @@ class ChatManager:
         
         # Format simple location list - NO directions
         def format_simple_locations():
-            locations_text = "Anthill IQ has four locations in Bangalore, all of which are open and operational:\n\n"
-            
-            locations_text += "1. Cunningham Road (Central Bangalore)\n"
-            locations_text += "2. Arekere (South Bangalore)\n"
-            locations_text += "3. Hulimavu (South Bangalore)\n"
-            locations_text += "4. Hebbal (North Bangalore) - Now fully operational\n\n"
-            
-            locations_text += "You can select any of these locations when booking through our website or this chatbot."
-            
-            return locations_text
+            return """Anthill IQ has four locations in Bangalore, all of which are fully operational and ready to serve you:
+
+1. Cunningham Road (Central Bangalore)
+2. Arekere (South Bangalore)
+3. Hulimavu (South Bangalore)
+4. Hebbal (North Bangalore)
+
+All our centers are open and offer the complete range of services including private offices, dedicated desks, coworking spaces, and meeting rooms. Would you like to know more about any specific location?"""
             
         # Format detailed location addresses - ONLY NAMES and ADDRESSES
         def format_detailed_addresses():
-            locations_text = "Anthill IQ Workspace Locations:\n\n"
-            
-            locations_text += "1. Cunningham Road\n"
-            locations_text += "1st Floor, Anthill IQ, 20, Cunningham Rd, Vasanth Nagar, Bengaluru, Karnataka 560052\n\n"
-            
-            locations_text += "2. Arekere\n"
-            locations_text += "224, Bannerghatta Rd, near Arekere Gate, Arekere, Bengaluru, Karnataka 560076\n\n"
-            
-            locations_text += "3. Hulimavu\n"
-            locations_text += "75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076\n\n"
-            
-            locations_text += "4. Hebbal\n"
-            locations_text += "North Bangalore - Now fully operational\n\n"
-            
-            return locations_text
+            return """Here are all our fully operational Anthill IQ locations:
+
+1. Cunningham Road
+1st Floor, Anthill IQ, 20, Cunningham Rd, Vasanth Nagar, Bengaluru, Karnataka 560052
+
+2. Arekere
+224, Bannerghatta Rd, near Arekere Gate, Arekere, Bengaluru, Karnataka 560076
+
+3. Hulimavu
+75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076
+
+4. Hebbal
+Hebbal, North Bangalore
+
+All locations are open and ready for immediate bookings. Would you like to schedule a visit to any of these centers?"""
         
         # Check for BTM Layout mentions
         if "btm" in message_lower or "btm layout" in message_lower:
             return {
-                "response": "Anthill IQ doesn't have a branch in BTM Layout. Our locations are:\n\n1. Cunningham Road (Central Bangalore)\n2. Arekere (South Bangalore)\n3. Hulimavu (South Bangalore)\n4. Hebbal (North Bangalore)\n\nWould you like to book a workspace at any of these locations?",
+                "response": """Anthill IQ doesn't have a branch in BTM Layout. Our fully operational locations are:
+
+1. Cunningham Road (Central Bangalore)
+2. Arekere (South Bangalore)
+3. Hulimavu (South Bangalore)
+4. Hebbal (North Bangalore)
+
+All our centers are open and ready to serve you. Would you like to know more about any of these locations?""",
                 "source": "location_correction",
                 "confidence": 1.0
             }

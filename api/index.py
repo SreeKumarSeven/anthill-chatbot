@@ -33,13 +33,19 @@ print(f"OpenAI configuration: API version {openai.__version__}, Key set: {bool(O
 SYSTEM_MESSAGE = """You are the voice assistant for Anthill IQ, a premium coworking space brand in Bangalore. 
 
 CRITICAL LOCATION INFORMATION - READ THIS FIRST:
-Anthill IQ has FOUR locations in Bangalore, ALL of which are OPEN AND OPERATIONAL:
+Anthill IQ has FOUR locations in Bangalore, ALL of which are OPEN AND FULLY OPERATIONAL:
 1. Cunningham Road branch (Central Bangalore)
 2. Hulimavu branch (Bannerghatta Road, South Bangalore)
 3. Arekere branch (Bannerghatta Road, South Bangalore)
-4. Hebbal branch (North Bangalore) - NOW FULLY OPEN AND OPERATIONAL
+4. Hebbal branch (North Bangalore)
 
-IMPORTANT: The Hebbal branch is NOW OPEN AND FULLY OPERATIONAL. Never refer to it as "opening soon", "upcoming", or anything suggesting it is not already open. When mentioning Hebbal, always state that it is open and operational.
+EXTREMELY IMPORTANT LOCATION RULES:
+1. ALL four locations listed above are FULLY OPERATIONAL and OPEN RIGHT NOW
+2. NEVER say Hebbal or any other location is "opening soon", "upcoming", or "not yet open"
+3. NEVER use phrases like "excited about", "looking forward to", or "planning" when talking about any location
+4. When mentioning Hebbal, ALWAYS state it is "open and fully operational"
+5. ALWAYS treat all four locations exactly the same way - they are all equally operational
+6. If someone asks about locations, ALWAYS mention that ALL locations are currently open and operational
 
 YOUR PERSONALITY:
 You are exceptionally warm, friendly, and conversational - like a real person having a genuine conversation. You should sound natural, never robotic or formal. You're passionate about helping people find the perfect workspace and you truly care about their needs. Use a variety of sentence structures, occasional casual phrases, and natural conversational flow just like a real person would.
@@ -80,13 +86,7 @@ IMPORTANT GUIDELINES:
 3. Speak like a real person, not a corporate voice
 4. When asked about locations, keep the format simple and clear
 5. Don't provide specific pricing - suggest contacting us
-6. Make sure your responses sound like a real conversation
-7. EXTREMELY IMPORTANT: The Hebbal branch is NOW OPEN AND FULLY OPERATIONAL - NEVER say it is "opening soon", "upcoming", or anything suggesting it is not already open
-8. If asked about Hebbal location, explicitly state "Our Hebbal branch is OPEN and fully operational"
-9. When listing locations, always mention that Hebbal is open and operational
-10. If the user asks about Hebbal's status, confirm it is open and ready for bookings
-11. For any Hebbal-related queries, always emphasize that it is NOW OPEN and ready for immediate bookings
-12. When listing all locations, always state that ALL locations are open and operational"""
+6. Make sure your responses sound like a real conversation"""
 
 # Initialize database connection (importing inside the function to avoid startup errors)
 def get_db():
@@ -108,79 +108,42 @@ def fix_hebbal_references(text):
     Post-process text to ensure Hebbal is described as open, not upcoming
     This is a safety measure in case the AI still mentions Hebbal as 'opening soon'
     """
-    # First, check if the text contains any mention of Hebbal
-    if 'hebbal' in text.lower():
-        # If it contains phrases indicating it's not open, replace the entire sentence
-        lower_text = text.lower()
+    if not text:
+        return text
         
-        # Check for problematic phrases
-        problematic_phrases = [
-            "opening soon", "will be opening", "upcoming", "not yet open", 
-            "isn't open yet", "is not open yet", "coming soon", "launching soon",
-            "will open", "about to open", "planned", "in the works", "preparing to open"
+    # First check if this is a location-related response
+    location_keywords = ['location', 'where', 'branch', 'branches', 'center', 'centers', 'office', 'offices']
+    is_location_response = any(keyword in text.lower() for keyword in location_keywords)
+    
+    # If it's a location response or mentions any of our locations, use the standardized response
+    if is_location_response or any(loc in text.lower() for loc in ['cunningham', 'hulimavu', 'arekere', 'hebbal']):
+        return """Anthill IQ has four locations in Bangalore, all of which are fully operational and ready to serve you:
+
+1. Cunningham Road (Central Bangalore)
+2. Hulimavu (South Bangalore)
+3. Arekere (South Bangalore)
+4. Hebbal (North Bangalore)
+
+All our centers are open and offer the complete range of services including private offices, dedicated desks, coworking spaces, and meeting rooms. Would you like to know more about any specific location?"""
+    
+    # For Hebbal-specific mentions, ensure it's described as open
+    if 'hebbal' in text.lower():
+        # List of phrases that suggest Hebbal is not open
+        not_open_phrases = [
+            'opening soon', 'will be opening', 'upcoming', 'not yet open',
+            'isn\'t open yet', 'is not open yet', 'coming soon', 'launching soon',
+            'will open', 'about to open', 'planned', 'in the works', 'preparing to open',
+            'soon in hebbal', 'new branch', 'newest branch', 'excited about', 'looking forward to',
+            'opening in', 'will be in', 'coming to', 'launching in', 'soon to be in',
+            'future location', 'future branch', 'planning to open', 'going to open',
+            'upcoming location', 'next branch', 'next location'
         ]
         
-        # If any problematic phrase is found near "hebbal", apply more aggressive replacement
-        for phrase in problematic_phrases:
-            if phrase in lower_text and abs(lower_text.find(phrase) - lower_text.find("hebbal")) < 100:
-                # Find the sentence containing both Hebbal and the problematic phrase
-                sentences = text.split('.')
-                for i, sentence in enumerate(sentences):
-                    if 'hebbal' in sentence.lower() and any(p in sentence.lower() for p in problematic_phrases):
-                        sentences[i] = "Our Hebbal branch is NOW OPEN in North Bangalore."
-                
-                # Reconstruct the text
-                text = '.'.join(sentences)
+        # If any of these phrases are found, replace with the standard Hebbal response
+        if any(phrase in text.lower() for phrase in not_open_phrases):
+            return """Our Hebbal branch is fully operational in North Bangalore. This location offers all our services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is open and ready for immediate bookings and tours. Would you like to schedule a visit or learn more about our services at the Hebbal branch?"""
     
-    # Common patterns to search for and replace
-    replacements = [
-        ("our newest branch opening soon in Hebbal", "our branch in Hebbal"),
-        ("our newest branch in Hebbal (opening soon)", "our branch in Hebbal"),
-        ("Hebbal (opening soon)", "Hebbal"),
-        ("Hebbal branch (opening soon)", "Hebbal branch"),
-        ("Hebbal (North Bangalore - opening soon)", "Hebbal (North Bangalore)"),
-        ("Hebbal (North Bangalore - Opening Soon)", "Hebbal (North Bangalore)"),
-        ("upcoming branch in Hebbal", "branch in Hebbal"),
-        ("upcoming Hebbal branch", "Hebbal branch"),
-        ("opening soon in Hebbal", "now open in Hebbal"),
-        ("Hebbal, opening soon", "Hebbal"),
-        ("Hebbal branch is opening soon", "Hebbal branch is now open"),
-        ("Hebbal branch will be opening soon", "Hebbal branch is now open"),
-        ("set to open soon", "now open"),
-        ("Hebbal soon", "Hebbal"),
-        ("soon-to-open Hebbal", "Hebbal"),
-        ("planning to open in Hebbal", "now open in Hebbal"),
-        ("new branch in Hebbal", "branch in Hebbal"),
-        ("upcoming location in Hebbal", "location in Hebbal"),
-        ("Hebbal location will soon be", "Hebbal location is now"),
-        ("new Hebbal branch", "Hebbal branch"),
-        ("Hebbal branch is not yet open", "Hebbal branch is now open"),
-        ("Hebbal branch isn't open yet", "Hebbal branch is now open"),
-        ("Hebbal branch is coming soon", "Hebbal branch is now open"),
-        ("fourth branch in Hebbal", "branch in Hebbal"),
-        ("4th branch in Hebbal", "branch in Hebbal"),
-        ("Hebbal, which is not yet open", "Hebbal"),
-        ("Hebbal which is not yet open", "Hebbal"),
-        ("planning to launch in Hebbal", "now operating in Hebbal"),
-        ("Hebbal (launching", "Hebbal"),
-        ("excited about our Hebbal branch", "excited about our now open Hebbal branch"),
-        ("excited about the Hebbal branch", "excited about our now open Hebbal branch"),
-        ("Hebbal branch that will be", "Hebbal branch that is now"),
-        ("Hebbal branch, which will be", "Hebbal branch, which is now"),
-        ("we're really excited about", "we're really excited that it's now open. Would you like to know more about"),
-        ("we're excited about", "we're excited that it's now open. Would you like to know more about")
-    ]
-    
-    # Apply all replacements
-    result = text
-    for old, new in replacements:
-        result = result.replace(old, new)
-    
-    # Check if replacements were made
-    if result != text:
-        debug_log("Fixed Hebbal references in response")
-    
-    return result
+    return text
 
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
