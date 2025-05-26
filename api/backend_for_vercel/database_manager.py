@@ -270,4 +270,34 @@ class DatabaseManager:
             return bookings
         except Exception as e:
             print(f"Error getting recent bookings: {str(e)}")
-            return [] 
+            return []
+    
+    def save_user_registration(self, name: str, phone: str) -> str:
+        """Save user registration information and return user_id"""
+        try:
+            with self.get_connection() as conn:
+                with conn.cursor() as cur:
+                    # Check if user already exists with this phone number
+                    cur.execute(
+                        "SELECT user_id FROM users WHERE phone = %s",
+                        (phone,)
+                    )
+                    existing_user = cur.fetchone()
+                    
+                    if existing_user:
+                        # Update existing user's name if different
+                        cur.execute(
+                            "UPDATE users SET name = %s WHERE phone = %s RETURNING user_id",
+                            (name, phone)
+                        )
+                        return str(cur.fetchone()[0])
+                    else:
+                        # Insert new user
+                        cur.execute(
+                            "INSERT INTO users (name, phone, created_at) VALUES (%s, %s, NOW()) RETURNING user_id",
+                            (name, phone)
+                        )
+                        return str(cur.fetchone()[0])
+        except Exception as e:
+            print(f"Error saving user registration: {str(e)}")
+            raise e 

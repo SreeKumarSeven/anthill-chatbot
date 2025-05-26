@@ -261,43 +261,51 @@
             }
         }
         
-        // Register the user
-        async function registerUser(name, phone) {
+        // Registration form handler
+        registerButton.addEventListener('click', async function() {
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            
+            // Validate inputs
+            if (!name) {
+                alert('Please enter your name');
+                return;
+            }
+            if (!phone) {
+                alert('Please enter your phone number');
+                return;
+            }
+            
             try {
-                const response = await fetch(`${API_URL}/register-user`, {
+                const response = await fetch(`${API_URL}/register`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        name: name,
-                        phone: phone
-                    }),
+                    body: JSON.stringify({ name, phone })
                 });
                 
                 const data = await response.json();
                 
-                if (data.status === 'success') {
+                if (data.success) {
+                    // Store user ID for future messages
                     userId = data.user_id;
-                    sessionId = data.session_id;
+                    sessionId = Date.now().toString();
                     
-                    // Hide registration form, show chat
+                    // Hide registration form and show chat
                     registrationContainer.style.display = 'none';
                     chatContainer.style.display = 'flex';
                     
-                    // Welcome message
-                    addBotMessage("Hello! I'm the Anthill IQ Assistant. How can I help you today?");
-                    
-                    // Focus on input
-                    messageInput.focus();
+                    // Add welcome message
+                    addBotMessage(`Welcome ${name}! How can I assist you today?`);
                 } else {
-                    alert('There was an error registering. Please try again.');
+                    alert(data.error || 'Registration failed. Please try again.');
                 }
             } catch (error) {
-                console.error('Error registering user:', error);
-                alert('There was an error connecting to the service. Please try again later.');
+                console.error('Registration error:', error);
+                alert('Registration failed. Please try again.');
             }
-        }
+        });
         
         // Handle send button click
         sendButton.addEventListener('click', function() {
@@ -319,18 +327,6 @@
                     messageInput.value = '';
                 }
                 e.preventDefault();
-            }
-        });
-        
-        // Handle register button click
-        registerButton.addEventListener('click', function() {
-            const name = document.getElementById('name').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            
-            if (name && phone) {
-                registerUser(name, phone);
-            } else {
-                alert('Please fill in all fields');
             }
         });
     </script>

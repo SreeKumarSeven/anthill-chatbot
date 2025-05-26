@@ -8,6 +8,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 import openai
 import requests
+import re
+from flask import request, jsonify
 
 # Load environment variables
 load_dotenv()
@@ -211,6 +213,8 @@ class handler(BaseHTTPRequestHandler):
                 self._handle_chat(data)
             elif path == '/api/register-user':
                 self._handle_register_user(data)
+            elif path == '/api/register':
+                self._handle_register(data)
             else:
                 self._send_json_response(404, {"error": "Not found"})
                 
@@ -362,6 +366,37 @@ class handler(BaseHTTPRequestHandler):
             
         except Exception as e:
             self._send_json_response(500, {"error": str(e)})
+    
+    def _handle_register(self, data):
+        try:
+            name = data.get('name')
+            phone = data.get('phone')
+            
+            if not name or not phone:
+                self._send_json_response(400, {"error": "Name and phone are required"})
+                return
+            
+            # Validate phone number format
+            if not re.match(r'^\+?[\d\s-]{10,}$', phone):
+                self._send_json_response(400, {"error": "Invalid phone number format"})
+                return
+            
+            # Save user registration
+            db = get_db()
+            if db:
+                user_id = db.save_user_registration(name, phone)
+                
+            response = {
+                "success": True,
+                "user_id": user_id,
+                "message": "Registration successful"
+            }
+            
+            self._send_json_response(200, response)
+            
+        except Exception as e:
+            print(f"Error in registration: {str(e)}")
+            self._send_json_response(500, {"error": "Registration failed"})
     
     def _send_json_response(self, status_code, data):
         self.send_response(status_code)
