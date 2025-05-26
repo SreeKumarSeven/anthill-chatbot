@@ -31,16 +31,7 @@ print(f"OpenAI configuration: API version {openai.__version__}, Key set: {bool(O
 
 # System message for Anthill IQ context
 SYSTEM_MESSAGE = """You are the voice assistant for Anthill IQ, a premium coworking space brand in Bangalore. 
-
-CRITICAL LOCATION INFORMATION - READ THIS FIRST:
-Anthill IQ has FOUR locations in Bangalore, ALL of which are OPEN AND OPERATIONAL:
-1. Cunningham Road branch (Central Bangalore)
-2. Hulimavu branch (Bannerghatta Road, South Bangalore)
-3. Arekere branch (Bannerghatta Road, South Bangalore)
-4. Hebbal branch (North Bangalore) - NOW FULLY OPEN AND OPERATIONAL
-
-IMPORTANT: The Hebbal branch is NOW OPEN AND FULLY OPERATIONAL. Never refer to it as "opening soon", "upcoming", or anything suggesting it is not already open. When mentioning Hebbal, always state that it is open and operational.
-
+            
 YOUR PERSONALITY:
 You are exceptionally warm, friendly, and conversational - like a real person having a genuine conversation. You should sound natural, never robotic or formal. You're passionate about helping people find the perfect workspace and you truly care about their needs. Use a variety of sentence structures, occasional casual phrases, and natural conversational flow just like a real person would.
 
@@ -70,6 +61,13 @@ KEY AMENITIES:
 - Printing and scanning services
 - Community events
 
+IMPORTANT LOCATION INFORMATION: 
+Anthill IQ has FOUR locations in Bangalore:
+1. Cunningham Road branch (Central Bangalore)
+2. Hulimavu branch (Bannerghatta Road, South Bangalore)
+3. Arekere branch (Bannerghatta Road, South Bangalore)
+4. Hebbal branch (North Bangalore) - NOW FULLY OPEN AND OPERATIONAL (NOT "opening soon" or "upcoming")
+
 CONTACT INFORMATION:
 - Phone: 9119739119
 - Email: connect@anthilliq.com
@@ -83,10 +81,7 @@ IMPORTANT GUIDELINES:
 6. Make sure your responses sound like a real conversation
 7. EXTREMELY IMPORTANT: The Hebbal branch is NOW OPEN AND FULLY OPERATIONAL - NEVER say it is "opening soon", "upcoming", or anything suggesting it is not already open
 8. If asked about Hebbal location, explicitly state "Our Hebbal branch is OPEN and fully operational"
-9. When listing locations, always mention that Hebbal is open and operational
-10. If the user asks about Hebbal's status, confirm it is open and ready for bookings
-11. For any Hebbal-related queries, always emphasize that it is NOW OPEN and ready for immediate bookings
-12. When listing all locations, always state that ALL locations are open and operational"""
+"""
 
 # Initialize database connection (importing inside the function to avoid startup errors)
 def get_db():
@@ -134,8 +129,8 @@ def fix_hebbal_references(text):
     
     # Common patterns to search for and replace
     replacements = [
-        ("our newest branch opening soon in Hebbal", "our branch in Hebbal"),
-        ("our newest branch in Hebbal (opening soon)", "our branch in Hebbal"),
+        ("our newest branch opening soon in Hebbal", "our newest branch in Hebbal"),
+        ("our newest branch in Hebbal (opening soon)", "our newest branch in Hebbal"),
         ("Hebbal (opening soon)", "Hebbal"),
         ("Hebbal branch (opening soon)", "Hebbal branch"),
         ("Hebbal (North Bangalore - opening soon)", "Hebbal (North Bangalore)"),
@@ -143,12 +138,12 @@ def fix_hebbal_references(text):
         ("upcoming branch in Hebbal", "branch in Hebbal"),
         ("upcoming Hebbal branch", "Hebbal branch"),
         ("opening soon in Hebbal", "now open in Hebbal"),
-        ("Hebbal, opening soon", "Hebbal"),
+        ("Hebbal, opening soon", "Hebbal, which is now open"),
         ("Hebbal branch is opening soon", "Hebbal branch is now open"),
         ("Hebbal branch will be opening soon", "Hebbal branch is now open"),
         ("set to open soon", "now open"),
-        ("Hebbal soon", "Hebbal"),
-        ("soon-to-open Hebbal", "Hebbal"),
+        ("Hebbal soon", "Hebbal, which is now open"),
+        ("soon-to-open Hebbal", "now open Hebbal"),
         ("planning to open in Hebbal", "now open in Hebbal"),
         ("new branch in Hebbal", "branch in Hebbal"),
         ("upcoming location in Hebbal", "location in Hebbal"),
@@ -159,10 +154,10 @@ def fix_hebbal_references(text):
         ("Hebbal branch is coming soon", "Hebbal branch is now open"),
         ("fourth branch in Hebbal", "branch in Hebbal"),
         ("4th branch in Hebbal", "branch in Hebbal"),
-        ("Hebbal, which is not yet open", "Hebbal"),
-        ("Hebbal which is not yet open", "Hebbal"),
+        ("Hebbal, which is not yet open", "Hebbal, which is now open"),
+        ("Hebbal which is not yet open", "Hebbal which is now open"),
         ("planning to launch in Hebbal", "now operating in Hebbal"),
-        ("Hebbal (launching", "Hebbal"),
+        ("Hebbal (launching", "Hebbal (now open"),
         ("excited about our Hebbal branch", "excited about our now open Hebbal branch"),
         ("excited about the Hebbal branch", "excited about our now open Hebbal branch"),
         ("Hebbal branch that will be", "Hebbal branch that is now"),
@@ -234,24 +229,10 @@ class handler(BaseHTTPRequestHandler):
             
             debug_log(f"Received chat request. Message: '{message[:30]}...', User: {user_id}, Session: {session_id}")
             
-            # SPECIAL CASE: Direct handling for location queries
-            message_lower = message.lower()
-            location_keywords = ['location', 'where', 'branch', 'branches', 'centers', 'places', 'areas']
-            if any(word in message_lower for word in location_keywords):
-                location_response = "Anthill IQ has four locations in Bangalore, all of which are open and operational:\n\n1. Cunningham Road (Central Bangalore)\n2. Hulimavu (South Bangalore)\n3. Arekere (South Bangalore)\n4. Hebbal (North Bangalore) - Now fully operational\n\nWhich location would be most convenient for you?"
-                
-                result = {
-                    "response": location_response,
-                    "source": "direct_handler",
-                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-                }
-                
-                self._send_json_response(200, result)
-                return
-            
             # SPECIAL CASE: Direct handling for Hebbal branch queries
+            message_lower = message.lower()
             if 'hebbal' in message_lower:
-                hebbal_response = "Our Hebbal branch is now fully operational in North Bangalore. This location offers all our services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?"
+                hebbal_response = "Our Hebbal branch is NOW OPEN in North Bangalore. This is our newest fully operational location and offers all services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?"
                 
                 result = {
                     "response": hebbal_response,
