@@ -1,8 +1,8 @@
-<!-- Anthill IQ Chatbot Widget for Wix -->
+<!-- Anthill IQ Chatbot Widget -->
 <div id="anthill-chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
     <!-- Chat Button -->
     <button id="anthill-chat-button" style="
-        background-color: #007bff;
+        background-color: #2a9a16;
         color: white;
         border: none;
         border-radius: 50%;
@@ -35,7 +35,7 @@
     ">
         <!-- Chat Header -->
         <div style="
-            background: #007bff;
+            background: #2a9a16;
             color: white;
             padding: 15px;
             font-weight: bold;
@@ -78,7 +78,7 @@
                 outline: none;
             ">
             <button id="anthill-chat-send" style="
-                background: #007bff;
+                background: #2a9a16;
                 color: white;
                 border: none;
                 border-radius: 20px;
@@ -104,17 +104,42 @@ document.addEventListener('DOMContentLoaded', function() {
     const send = document.getElementById('anthill-chat-send');
     const messages = document.getElementById('anthill-chat-messages');
 
+    // Function to fix Hebbal references
+    function fixHebbalReferences(text) {
+        if (!text) return text;
+        
+        const lowerText = text.toLowerCase();
+        if (lowerText.includes('hebbal')) {
+            const notOpenPhrases = [
+                'opening soon', 'will be opening', 'upcoming', 'not yet open',
+                'isn\'t open yet', 'is not open yet', 'coming soon', 'launching soon',
+                'will open', 'about to open', 'planned', 'in the works', 'preparing to open',
+                'soon in hebbal', 'new branch', 'newest branch'
+            ];
+            
+            for (const phrase of notOpenPhrases) {
+                if (lowerText.includes(phrase) && Math.abs(lowerText.indexOf(phrase) - lowerText.indexOf('hebbal')) < 100) {
+                    return "Anthill IQ has four locations in Bangalore, all of which are open and operational:\n\n1. Cunningham Road (Central Bangalore)\n2. Hulimavu (South Bangalore)\n3. Arekere (South Bangalore)\n4. Hebbal (North Bangalore) - Now fully operational\n\nWhich location would you like to know more about?";
+                }
+            }
+        }
+        
+        return text;
+    }
+
     // Add welcome message
     addMessage('Hello! Welcome to Anthill IQ. How can I help you today?', 'bot');
 
     // Toggle chat window
     button.addEventListener('click', () => {
         window.style.display = window.style.display === 'none' ? 'flex' : 'none';
+        button.innerHTML = window.style.display === 'none' ? '💬' : '✕';
     });
 
     // Close chat window
     close.addEventListener('click', () => {
         window.style.display = 'none';
+        button.innerHTML = '💬';
     });
 
     // Send message
@@ -148,9 +173,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 typingElement.remove();
             }
 
-            // Add bot response
+            // Add bot response with Hebbal fix
             if (data.response) {
-                addMessage(data.response, 'bot');
+                const fixedResponse = fixHebbalReferences(data.response);
+                addMessage(fixedResponse, 'bot');
             }
         })
         .catch(error => {
@@ -175,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
             padding: 10px 15px;
             border-radius: 15px;
             margin-bottom: 10px;
-            ${sender === 'user' ? 'margin-left: auto; background: #007bff; color: white;' : 'margin-right: auto; background: #f0f0f0;'}
+            ${sender === 'user' ? 'margin-left: auto; background: #2a9a16; color: white;' : 'margin-right: auto; background: #f0f0f0;'}
             ${isTyping ? 'animation: pulse 1.5s infinite;' : ''}
         `;
         messageDiv.textContent = text;
