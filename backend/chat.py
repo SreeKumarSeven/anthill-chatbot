@@ -115,12 +115,12 @@ class ChatManager:
         
         # Format simple location list - NO directions
         def format_simple_locations():
-            locations_text = "Anthill IQ has locations at:\n\n"
+            locations_text = "Anthill IQ has four locations in Bangalore, all of which are open and operational:\n\n"
             
             locations_text += "1. Cunningham Road (Central Bangalore)\n"
             locations_text += "2. Arekere (South Bangalore)\n"
             locations_text += "3. Hulimavu (South Bangalore)\n"
-            locations_text += "4. Hebbal (North Bangalore)\n\n"
+            locations_text += "4. Hebbal (North Bangalore) - Now fully operational\n\n"
             
             locations_text += "You can select any of these locations when booking through our website or this chatbot."
             
@@ -139,7 +139,8 @@ class ChatManager:
             locations_text += "3. Hulimavu\n"
             locations_text += "75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076\n\n"
             
-            locations_text += "4. Hebbal (North Bangalore)\n"
+            locations_text += "4. Hebbal\n"
+            locations_text += "North Bangalore - Now fully operational\n\n"
             
             return locations_text
         
