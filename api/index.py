@@ -85,7 +85,8 @@ IMPORTANT GUIDELINES:
 8. If asked about Hebbal location, explicitly state "Our Hebbal branch is OPEN and fully operational"
 9. When listing locations, always mention that Hebbal is open and operational
 10. If the user asks about Hebbal's status, confirm it is open and ready for bookings
-11. For any Hebbal-related queries, always emphasize that it is NOW OPEN and ready for immediate bookings"""
+11. For any Hebbal-related queries, always emphasize that it is NOW OPEN and ready for immediate bookings
+12. When listing all locations, always state that ALL locations are open and operational"""
 
 # Initialize database connection (importing inside the function to avoid startup errors)
 def get_db():
@@ -233,26 +234,27 @@ class handler(BaseHTTPRequestHandler):
             
             debug_log(f"Received chat request. Message: '{message[:30]}...', User: {user_id}, Session: {session_id}")
             
-            # SPECIAL CASE: Direct handling for Hebbal branch queries
+            # SPECIAL CASE: Direct handling for location queries
             message_lower = message.lower()
-            if 'hebbal' in message_lower:
-                hebbal_response = "Our Hebbal branch is now fully operational in North Bangalore. This location offers all our services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?"
+            location_keywords = ['location', 'where', 'branch', 'branches', 'centers', 'places', 'areas']
+            if any(word in message_lower for word in location_keywords):
+                location_response = "Anthill IQ has four locations in Bangalore, all of which are open and operational:\n\n1. Cunningham Road (Central Bangalore)\n2. Hulimavu (South Bangalore)\n3. Arekere (South Bangalore)\n4. Hebbal (North Bangalore) - Now fully operational\n\nWhich location would be most convenient for you?"
                 
                 result = {
-                    "response": hebbal_response,
+                    "response": location_response,
                     "source": "direct_handler",
                     "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
                 }
                 
                 self._send_json_response(200, result)
                 return
-                
-            # SPECIAL CASE: Direct handling for location queries
-            if any(word in message_lower for word in ['location', 'where', 'branch', 'branches', 'centers']):
-                location_response = "Anthill IQ has four locations in Bangalore, all of which are open and operational:\n\n1. Cunningham Road (Central Bangalore)\n2. Hulimavu (South Bangalore)\n3. Arekere (South Bangalore)\n4. Hebbal (North Bangalore) - Now fully operational\n\nWhich location would be most convenient for you?"
+            
+            # SPECIAL CASE: Direct handling for Hebbal branch queries
+            if 'hebbal' in message_lower:
+                hebbal_response = "Our Hebbal branch is now fully operational in North Bangalore. This location offers all our services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?"
                 
                 result = {
-                    "response": location_response,
+                    "response": hebbal_response,
                     "source": "direct_handler",
                     "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
                 }
