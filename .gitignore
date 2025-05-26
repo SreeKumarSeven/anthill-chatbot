@@ -35,3 +35,4 @@ build/
 
 # Heroku specific
 heroku-installer.exe 
+.vercel

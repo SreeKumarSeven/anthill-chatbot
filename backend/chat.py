@@ -11,25 +11,31 @@ import logging
 # Load environment variables from .env file
 load_dotenv()
 
-LOCATIONS = """Anthill IQ has three locations in Bangalore:
-1. Cunningham Road (Central Bangalore)
-2. Hulimavu (South Bangalore)
-3. Arekere (South Bangalore)"""
-
-LOCATIONS_DETAILED = """Here are our locations in Bangalore:
-1. Cunningham Road
-   Central Bangalore
-2. Hulimavu
-   South Bangalore
-3. Arekere
-   South Bangalore"""
-
-LOCATIONS_WITH_DETAILS = """Anthill IQ has three locations in Bangalore:
+LOCATIONS = """Anthill IQ has four locations in Bangalore:
 1. Cunningham Road (Central Bangalore)
 2. Hulimavu (South Bangalore)
 3. Arekere (South Bangalore)
+4. Hebbal (North Bangalore)"""
 
-Which location would you like to know more about?"""
+LOCATIONS_DETAILED = """Here are our locations in Bangalore:
+1. Cunningham Road
+   1st Floor, Anthill IQ, 20, Cunningham Rd, Vasanth Nagar, Bengaluru, Karnataka 560052
+2. Hulimavu
+   75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076
+3. Arekere
+   224, Bannerghatta Rd, near Arekere Gate, Arekere, Bengaluru, Karnataka 560076
+4. Hebbal
+   AnthillIQ Workspaces, 44/2A, Kodigehalli gate, Sahakarnagar post, Hebbal, Bengaluru, Karnataka 560092"""
+
+LOCATIONS_WITH_DETAILS = """Anthill IQ has four locations in Bangalore:
+1. Cunningham Road (Central Bangalore)
+   1st Floor, Anthill IQ, 20, Cunningham Rd, Vasanth Nagar, Bengaluru, Karnataka 560052
+2. Hulimavu (South Bangalore)
+   75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076
+3. Arekere (South Bangalore)
+   224, Bannerghatta Rd, near Arekere Gate, Arekere, Bengaluru, Karnataka 560076
+4. Hebbal (North Bangalore)
+   AnthillIQ Workspaces, 44/2A, Kodigehalli gate, Sahakarnagar post, Hebbal, Bengaluru, Karnataka 560092"""
 
 class ChatManager:
     def __init__(self):
@@ -670,10 +676,11 @@ def get_location_response(message_lower):
 SYSTEM_MESSAGE = """You are the Anthill IQ Assistant, helping users with information about our coworking spaces in Bangalore.
 
 Key Information:
-1. We have three locations:
+1. We have four locations:
    - Cunningham Road (Central Bangalore)
    - Hulimavu (South Bangalore)
    - Arekere (South Bangalore)
+   - Hebbal (North Bangalore)
 
 2. All locations are fully operational and offer:
    - Private Offices

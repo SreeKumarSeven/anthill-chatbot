@@ -33,10 +33,15 @@ print(f"OpenAI configuration: API version {openai.__version__}, Key set: {bool(O
 SYSTEM_MESSAGE = """You are the Anthill IQ Assistant, helping users with information about our coworking spaces in Bangalore.
 
 Key Information:
-1. We have three locations:
+1. We have four locations:
    - Cunningham Road (Central Bangalore)
+     1st Floor, Anthill IQ, 20, Cunningham Rd, Vasanth Nagar, Bengaluru, Karnataka 560052
    - Hulimavu (South Bangalore)
+     75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076
    - Arekere (South Bangalore)
+     224, Bannerghatta Rd, near Arekere Gate, Arekere, Bengaluru, Karnataka 560076
+   - Hebbal (North Bangalore)
+     AnthillIQ Workspaces, 44/2A, Kodigehalli gate, Sahakarnagar post, Hebbal, Bengaluru, Karnataka 560092
 
 2. All locations are fully operational and offer:
    - Private Offices
@@ -68,10 +73,11 @@ Guidelines:
 6. Highlight amenities and benefits
 7. Focus on convenience and flexibility"""
 
-LOCATIONS = """Anthill IQ has three locations in Bangalore:
+LOCATIONS = """Anthill IQ has four locations in Bangalore:
 1. Cunningham Road (Central Bangalore)
 2. Hulimavu (South Bangalore)
-3. Arekere (South Bangalore)"""
+3. Arekere (South Bangalore)
+4. Hebbal (North Bangalore)"""
 
 def get_location_response():
     return f"{LOCATIONS}\n\nAll our locations are fully operational and offer our complete range of services. Would you like to know more about any specific location?"
@@ -105,31 +111,18 @@ def fix_hebbal_references(text):
     
     # If it's a location response or mentions any of our locations, use the standardized response
     if is_location_response or any(loc in text.lower() for loc in ['cunningham', 'hulimavu', 'arekere', 'hebbal']):
-        return """Anthill IQ has four locations in Bangalore, all of which are fully operational and ready to serve you:
+        return """Anthill IQ has four locations in Bangalore:
 
 1. Cunningham Road (Central Bangalore)
+   1st Floor, Anthill IQ, 20, Cunningham Rd, Vasanth Nagar, Bengaluru, Karnataka 560052
 2. Hulimavu (South Bangalore)
+   75/B Windsor F4, Bannerghatta Rd, opp. Christ University, Hulimavu, Bengaluru, Karnataka 560076
 3. Arekere (South Bangalore)
+   224, Bannerghatta Rd, near Arekere Gate, Arekere, Bengaluru, Karnataka 560076
 4. Hebbal (North Bangalore)
+   AnthillIQ Workspaces, 44/2A, Kodigehalli gate, Sahakarnagar post, Hebbal, Bengaluru, Karnataka 560092
 
 All our centers are open and offer the complete range of services including private offices, dedicated desks, coworking spaces, and meeting rooms. Would you like to know more about any specific location?"""
-    
-    # For Hebbal-specific mentions, ensure it's described as open
-    if 'hebbal' in text.lower():
-        # List of phrases that suggest Hebbal is not open
-        not_open_phrases = [
-            'opening soon', 'will be opening', 'upcoming', 'not yet open',
-            'isn\'t open yet', 'is not open yet', 'coming soon', 'launching soon',
-            'will open', 'about to open', 'planned', 'in the works', 'preparing to open',
-            'soon in hebbal', 'new branch', 'newest branch', 'excited about', 'looking forward to',
-            'opening in', 'will be in', 'coming to', 'launching in', 'soon to be in',
-            'future location', 'future branch', 'planning to open', 'going to open',
-            'upcoming location', 'next branch', 'next location'
-        ]
-        
-        # If any of these phrases are found, replace with the standard Hebbal response
-        if any(phrase in text.lower() for phrase in not_open_phrases):
-            return """Our Hebbal branch is fully operational in North Bangalore. This location offers all our services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is open and ready for immediate bookings and tours. Would you like to schedule a visit or learn more about our services at the Hebbal branch?"""
     
     return text
 
