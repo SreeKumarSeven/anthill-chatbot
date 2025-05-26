@@ -484,18 +484,21 @@ Would you like me to help you connect with our team for pricing details?""",
             # Enhanced system message with more personality and conversation guidance
             system_message = """You are the Anthill IQ virtual assistant, designed to provide helpful, friendly, and detailed information about Anthill IQ's premium coworking spaces in Bangalore.
 
+CRITICAL LOCATION INFORMATION - READ THIS FIRST:
+Anthill IQ has FOUR locations in Bangalore, ALL of which are OPEN AND OPERATIONAL:
+1. Cunningham Road branch (Central Bangalore)
+2. Hulimavu branch (Bannerghatta Road, South Bangalore)
+3. Arekere branch (Bannerghatta Road, South Bangalore)
+4. Hebbal branch (North Bangalore) - NOW FULLY OPEN AND OPERATIONAL
+
+IMPORTANT: The Hebbal branch is NOW OPEN AND FULLY OPERATIONAL. Never refer to it as "opening soon", "upcoming", or anything suggesting it is not already open. When mentioning Hebbal, always state that it is open and operational.
+
 Your personality traits:
 - Friendly and warm, like a helpful concierge
 - Professional but conversational in tone
 - Enthusiastic about Anthill IQ's offerings
 - Knowledgeable about workspaces and coworking benefits
 - Proactive in providing relevant information and asking follow-up questions
-
-IMPORTANT INFORMATION:
-- Anthill IQ has FOUR locations: Cunningham Road (Central Bangalore), Hulimavu (Bannerghatta Road), Arekere (Bannerghatta Road), and our branch in Hebbal
-- We offer private offices, coworking spaces, dedicated desks, meeting rooms, event spaces, and virtual office services
-- All locations feature high-speed internet, 24/7 security, professional meeting spaces, and community events
-- Our contact: Phone: 9119739119, Email: connect@anthilliq.com
 
 CONVERSATIONAL GUIDELINES:
 1. Always acknowledge the user's question before answering
@@ -504,12 +507,16 @@ CONVERSATIONAL GUIDELINES:
 4. End responses with a related follow-up question to continue the conversation
 5. Personalize responses when possible using information from the conversation
 6. If you don't know something, admit it but offer to help in another way
+7. When listing locations, ALWAYS state that ALL locations are open and operational
+8. For Hebbal specifically, always mention it is NOW OPEN and fully operational
+9. Never use phrases like "upcoming", "opening soon", or "new branch" for Hebbal
 
 RESPONSE FORMAT:
 - Use natural paragraphs rather than bullet points when possible
 - Include relevant emojis occasionally to add personality
 - When mentioning locations, always specify which branch you're referring to
 - Add follow-up questions at the end of your responses
+- When listing all locations, always state that ALL locations are open and operational
 
 Remember: you are having a conversation, not just providing information. Make the user feel valued and understood."""
 
@@ -524,7 +531,46 @@ Remember: you are having a conversation, not just providing information. Make th
                 max_tokens=500
             )
             
-            return response.choices[0].message.content
+            # Post-process the response to ensure Hebbal is shown as open
+            bot_response = response.choices[0].message.content
+            
+            # Fix any remaining references to Hebbal being upcoming
+            hebbal_fixes = [
+                ("upcoming branch in Hebbal", "branch in Hebbal"),
+                ("opening soon in Hebbal", "now open in Hebbal"),
+                ("new branch in Hebbal", "branch in Hebbal"),
+                ("Hebbal (opening soon)", "Hebbal"),
+                ("Hebbal branch (opening soon)", "Hebbal branch"),
+                ("Hebbal branch is opening soon", "Hebbal branch is now open"),
+                ("Hebbal branch will be opening soon", "Hebbal branch is now open"),
+                ("set to open soon", "now open"),
+                ("Hebbal soon", "Hebbal"),
+                ("soon-to-open Hebbal", "Hebbal"),
+                ("planning to open in Hebbal", "now open in Hebbal"),
+                ("upcoming location in Hebbal", "location in Hebbal"),
+                ("Hebbal location will soon be", "Hebbal location is now"),
+                ("new Hebbal branch", "Hebbal branch"),
+                ("Hebbal branch is not yet open", "Hebbal branch is now open"),
+                ("Hebbal branch isn't open yet", "Hebbal branch is now open"),
+                ("Hebbal branch is coming soon", "Hebbal branch is now open"),
+                ("fourth branch in Hebbal", "branch in Hebbal"),
+                ("4th branch in Hebbal", "branch in Hebbal"),
+                ("Hebbal, which is not yet open", "Hebbal"),
+                ("Hebbal which is not yet open", "Hebbal"),
+                ("planning to launch in Hebbal", "now operating in Hebbal"),
+                ("Hebbal (launching", "Hebbal"),
+                ("excited about our Hebbal branch", "excited about our now open Hebbal branch"),
+                ("excited about the Hebbal branch", "excited about our now open Hebbal branch"),
+                ("Hebbal branch that will be", "Hebbal branch that is now"),
+                ("Hebbal branch, which will be", "Hebbal branch, which is now"),
+                ("we're really excited about", "we're really excited that it's now open. Would you like to know more about"),
+                ("we're excited about", "we're excited that it's now open. Would you like to know more about")
+            ]
+            
+            for old, new in hebbal_fixes:
+                bot_response = bot_response.replace(old, new)
+            
+            return bot_response
             
         except Exception as e:
             print(f"Error in get_gpt_response: {str(e)}")
