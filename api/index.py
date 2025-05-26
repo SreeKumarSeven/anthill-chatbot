@@ -1,21 +1,16 @@
 """
 Minimal API handler for Vercel deployment
 """
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from http.server import BaseHTTPRequestHandler
 import json
 import os
 from datetime import datetime
 from dotenv import load_dotenv
 import openai
-import requests
 import re
 
 # Load environment variables
 load_dotenv()
-
-app = Flask(__name__)
-CORS(app)
 
 # Set API key
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -87,173 +82,119 @@ IMPORTANT GUIDELINES:
 8. If asked about Hebbal location, explicitly state "Our Hebbal branch is OPEN and fully operational"
 """
 
-# Initialize database connection (importing inside the function to avoid startup errors)
-def get_db():
-    try:
-        from api.simple_db import SimpleDB
-        return SimpleDB()
-    except Exception as e:
-        print(f"DB error: {str(e)}")
-        return None
+class handler(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type")
+        self.end_headers()
 
-# For debugging
-def debug_log(message):
-    """Print a debug message with timestamp"""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[DEBUG {timestamp}] {message}")
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        
+        response = {
+            "status": "online",
+            "service": "Anthill IQ Chatbot API",
+            "openai_key": bool(OPENAI_API_KEY)
+        }
+        
+        self.wfile.write(json.dumps(response).encode())
 
-def fix_hebbal_references(text):
-    """
-    Post-process text to ensure Hebbal is described as open, not upcoming
-    This is a safety measure in case the AI still mentions Hebbal as 'opening soon'
-    """
-    # First, check if the text contains any mention of Hebbal
-    if 'hebbal' in text.lower():
-        # If it contains phrases indicating it's not open, replace the entire sentence
-        lower_text = text.lower()
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
         
-        # Check for problematic phrases
-        problematic_phrases = [
-            "opening soon", "will be opening", "upcoming", "not yet open", 
-            "isn't open yet", "is not open yet", "coming soon", "launching soon",
-            "will open", "about to open", "planned", "in the works", "preparing to open"
-        ]
-        
-        # If any problematic phrase is found near "hebbal", apply more aggressive replacement
-        for phrase in problematic_phrases:
-            if phrase in lower_text and abs(lower_text.find(phrase) - lower_text.find("hebbal")) < 100:
-                # Find the sentence containing both Hebbal and the problematic phrase
-                sentences = text.split('.')
-                for i, sentence in enumerate(sentences):
-                    if 'hebbal' in sentence.lower() and any(p in sentence.lower() for p in problematic_phrases):
-                        sentences[i] = "Our Hebbal branch is NOW OPEN in North Bangalore."
-                
-                # Reconstruct the text
-                text = '.'.join(sentences)
-    
-    # Common patterns to search for and replace
-    replacements = [
-        ("our newest branch opening soon in Hebbal", "our newest branch in Hebbal"),
-        ("our newest branch in Hebbal (opening soon)", "our newest branch in Hebbal"),
-        ("Hebbal (opening soon)", "Hebbal"),
-        ("Hebbal branch (opening soon)", "Hebbal branch"),
-        ("Hebbal (North Bangalore - opening soon)", "Hebbal (North Bangalore)"),
-        ("Hebbal (North Bangalore - Opening Soon)", "Hebbal (North Bangalore)"),
-        ("upcoming branch in Hebbal", "branch in Hebbal"),
-        ("upcoming Hebbal branch", "Hebbal branch"),
-        ("opening soon in Hebbal", "now open in Hebbal"),
-        ("Hebbal, opening soon", "Hebbal, which is now open"),
-        ("Hebbal branch is opening soon", "Hebbal branch is now open"),
-        ("Hebbal branch will be opening soon", "Hebbal branch is now open"),
-        ("set to open soon", "now open"),
-        ("Hebbal soon", "Hebbal, which is now open"),
-        ("soon-to-open Hebbal", "now open Hebbal"),
-        ("planning to open in Hebbal", "now open in Hebbal"),
-        ("new branch in Hebbal", "branch in Hebbal"),
-        ("upcoming location in Hebbal", "location in Hebbal"),
-        ("Hebbal location will soon be", "Hebbal location is now"),
-        ("new Hebbal branch", "Hebbal branch"),
-        ("Hebbal branch is not yet open", "Hebbal branch is now open"),
-        ("Hebbal branch isn't open yet", "Hebbal branch is now open"),
-        ("Hebbal branch is coming soon", "Hebbal branch is now open"),
-        ("fourth branch in Hebbal", "branch in Hebbal"),
-        ("4th branch in Hebbal", "branch in Hebbal"),
-        ("Hebbal, which is not yet open", "Hebbal, which is now open"),
-        ("Hebbal which is not yet open", "Hebbal which is now open"),
-        ("planning to launch in Hebbal", "now operating in Hebbal"),
-        ("Hebbal (launching", "Hebbal (now open"),
-        ("excited about our Hebbal branch", "excited about our now open Hebbal branch"),
-        ("excited about the Hebbal branch", "excited about our now open Hebbal branch"),
-        ("Hebbal branch that will be", "Hebbal branch that is now"),
-        ("Hebbal branch, which will be", "Hebbal branch, which is now"),
-        ("we're really excited about", "we're really excited that it's now open. Would you like to know more about"),
-        ("we're excited about", "we're excited that it's now open. Would you like to know more about")
-    ]
-    
-    # Apply all replacements
-    result = text
-    for old, new in replacements:
-        result = result.replace(old, new)
-    
-    # Check if replacements were made
-    if result != text:
-        debug_log("Fixed Hebbal references in response")
-    
-    return result
-
-@app.route('/api/chat', methods=['POST'])
-def chat():
-    try:
-        data = request.json
-        message = data.get('message')
-        user_id = data.get('user_id', 'anonymous')
-        session_id = data.get('session_id')
-        
-        if not message:
-            return jsonify({"error": "Message cannot be empty"}), 400
-            
-        # Process the chat message with OpenAI
         try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": SYSTEM_MESSAGE},
-                    {"role": "user", "content": message}
-                ],
-                temperature=0.7,
-                max_tokens=500
-            )
+            data = json.loads(post_data.decode('utf-8'))
+            path = self.path.lower()
             
-            bot_response = response.choices[0].message.content
+            if path == '/api/chat':
+                self._handle_chat(data)
+            elif path == '/api/register':
+                self._handle_register(data)
+            else:
+                self._send_json_response(404, {"error": "Not found"})
+                
+        except Exception as e:
+            self._send_json_response(500, {"error": str(e)})
+
+    def _handle_chat(self, data):
+        try:
+            message = data.get('message')
+            user_id = data.get('user_id', 'anonymous')
+            session_id = data.get('session_id')
             
-            return jsonify({
-                "response": bot_response,
-                "source": "openai",
-                "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            if not message:
+                self._send_json_response(400, {"error": "Message cannot be empty"})
+                return
+            
+            try:
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": SYSTEM_MESSAGE},
+                        {"role": "user", "content": message}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500
+                )
+                
+                bot_response = response.choices[0].message.content
+                
+                self._send_json_response(200, {
+                    "response": bot_response,
+                    "source": "openai",
+                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                })
+                
+            except Exception as e:
+                self._send_json_response(500, {
+                    "error": f"Error processing message: {str(e)}"
+                })
+                
+        except Exception as e:
+            self._send_json_response(500, {"error": str(e)})
+
+    def _handle_register(self, data):
+        try:
+            name = data.get('name')
+            phone = data.get('phone')
+            
+            if not name or not phone:
+                self._send_json_response(400, {"error": "Name and phone are required"})
+                return
+            
+            # Validate phone number format
+            if not re.match(r'^\+?[\d\s-]{10,}$', phone):
+                self._send_json_response(400, {"error": "Invalid phone number format"})
+                return
+            
+            # Generate user ID
+            user_id = f"user_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            
+            self._send_json_response(200, {
+                "success": True,
+                "user_id": user_id,
+                "message": "Registration successful"
             })
             
         except Exception as e:
-            return jsonify({
-                "error": f"Error processing message: {str(e)}"
-            }), 500
-            
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+            self._send_json_response(500, {"error": str(e)})
 
-@app.route('/api/register', methods=['POST'])
-def register():
-    try:
-        data = request.json
-        name = data.get('name')
-        phone = data.get('phone')
-        
-        if not name or not phone:
-            return jsonify({'error': 'Name and phone are required'}), 400
-            
-        # Validate phone number format
-        if not re.match(r'^\+?[\d\s-]{10,}$', phone):
-            return jsonify({'error': 'Invalid phone number format'}), 400
-            
-        # Generate user ID (you can modify this as needed)
-        user_id = f"user_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-        
-        return jsonify({
-            'success': True,
-            'user_id': user_id,
-            'message': 'Registration successful'
-        })
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/')
-def home():
-    return jsonify({
-        "status": "online",
-        "service": "Anthill IQ Chatbot API",
-        "openai_key": bool(OPENAI_API_KEY)
-    })
+    def _send_json_response(self, status_code, data):
+        self.send_response(status_code)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
 
 # For local development
 if __name__ == '__main__':
-    app.run(debug=True) 
+    from http.server import HTTPServer
+    server = HTTPServer(('0.0.0.0', 8080), handler)
+    print('Starting server...')
+    server.serve_forever() 
