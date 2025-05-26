@@ -478,6 +478,47 @@ For pricing, capacity information, and availability, please contact us at 911973
         
         return None
 
+    def preprocess_identity_query(self, message: str) -> Optional[Dict]:
+        """Handle queries about the chatbot's identity and Anthill IQ"""
+        message_lower = message.lower()
+        
+        identity_patterns = [
+            'who are you',
+            'what are you',
+            'are you a bot',
+            'are you human',
+            'are you ai',
+            'what is anthill',
+            'what is anthill iq',
+            'tell me about anthill',
+            'what does anthill mean',
+            'meaning of anthill',
+            'about anthill'
+        ]
+        
+        if any(pattern in message_lower for pattern in identity_patterns):
+            return {
+                "response": """I am the Anthill IQ Assistant, your dedicated guide to our premium coworking spaces in Bangalore. 
+
+Anthill IQ is Bangalore's premium coworking space provider, offering intelligent workspace solutions that foster productivity, creativity, and community. The name represents our core values:
+- "Anthill": A collaborative and industrious community working together
+- "IQ": Intelligence in workspace solutions and smart amenities
+
+We provide premium workspace solutions including:
+• Private Offices
+• Dedicated Desks
+• Coworking Spaces
+• Meeting Rooms
+• Event Spaces
+• Training Rooms
+
+Our spaces are designed to create an ecosystem where professionals, startups, and enterprises can thrive together. Would you like to know more about our services or locations?""",
+                "source": "identity_info",
+                "confidence": 1.0
+            }
+        
+        return None
+
     async def get_gpt_response(self, message: str) -> str:
         """Get a response from OpenAI's API"""
         try:
@@ -543,10 +584,19 @@ For pricing, capacity information, and availability, please contact us at 911973
     async def handle_message(self, message, conversation_id=None, user_id=None):
         """Handle incoming message and generate appropriate response."""
         try:
-            # Check if message is about a non-Anthill IQ topic
-            non_anthill_keywords = ["wework", "bhive", "91springboard", "awfis", "cowrks", "innov8", "indiqube", "smartworks"]
             message_lower = message.lower()
             
+            # Check identity queries first
+            identity_info = self.preprocess_identity_query(message)
+            if identity_info:
+                self.log_conversation(message, identity_info["response"], identity_info["source"], user_id)
+                return {
+                    "response": identity_info["response"],
+                    "conversation_id": conversation_id
+                }
+                
+            # Check if message is about a non-Anthill IQ topic
+            non_anthill_keywords = ["wework", "bhive", "91springboard", "awfis", "cowrks", "innov8", "indiqube", "smartworks"]
             if any(keyword in message_lower for keyword in non_anthill_keywords):
                 return {
                     "response": "I'm specialized in providing information about Anthill IQ's coworking spaces and services. I don't have detailed information about other coworking providers.",

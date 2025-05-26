@@ -162,6 +162,42 @@ def is_about_anthill_query(message_lower):
     ]
     return any(keyword in message_lower for keyword in about_keywords)
 
+# Add identity query detection
+def is_identity_query(message_lower):
+    """Check if the message is asking about the chatbot's identity or Anthill IQ"""
+    identity_patterns = [
+        'who are you',
+        'what are you',
+        'are you a bot',
+        'are you human',
+        'are you ai',
+        'what is anthill',
+        'what is anthill iq',
+        'tell me about anthill',
+        'what does anthill mean',
+        'meaning of anthill',
+        'about anthill'
+    ]
+    return any(pattern in message_lower for pattern in identity_patterns)
+
+def get_identity_response():
+    """Get response for identity queries"""
+    return """I am the Anthill IQ Assistant, your dedicated guide to our premium coworking spaces in Bangalore. 
+
+Anthill IQ is Bangalore's premium coworking space provider, offering intelligent workspace solutions that foster productivity, creativity, and community. The name represents our core values:
+- "Anthill": A collaborative and industrious community working together
+- "IQ": Intelligence in workspace solutions and smart amenities
+
+We provide premium workspace solutions including:
+• Private Offices
+• Dedicated Desks
+• Coworking Spaces
+• Meeting Rooms
+• Event Spaces
+• Training Rooms
+
+Our spaces are designed to create an ecosystem where professionals, startups, and enterprises can thrive together. Would you like to know more about our services or locations?"""
+
 class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
@@ -214,6 +250,17 @@ class handler(BaseHTTPRequestHandler):
             session_id = data.get('session_id', None)
             
             debug_log(f"Received chat request. Message: '{message[:30]}...', User: {user_id}, Session: {session_id}")
+            
+            # SPECIAL CASE: Handle identity queries first
+            if is_identity_query(message_lower):
+                identity_response = get_identity_response()
+                result = {
+                    "response": identity_response,
+                    "source": "direct_handler",
+                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                }
+                self._send_json_response(200, result)
+                return
             
             # SPECIAL CASE: Handle "what is Anthill IQ" queries first
             if is_about_anthill_query(message_lower):
