@@ -32,6 +32,11 @@ print(f"OpenAI configuration: API version {openai.__version__}, Key set: {bool(O
 # System message for Anthill IQ context
 SYSTEM_MESSAGE = """You are the Anthill IQ Assistant, helping users with information about our coworking spaces in Bangalore.
 
+About Anthill IQ:
+Anthill IQ is Bangalore's premium coworking space provider, offering intelligent workspace solutions that foster productivity, creativity, and community. The name represents our core values:
+- "Anthill": A collaborative and industrious community working together
+- "IQ": Intelligence in workspace solutions and smart amenities
+
 Key Information:
 1. We have four locations:
    - Cunningham Road (Central Bangalore)
@@ -43,14 +48,15 @@ Key Information:
    - Hebbal (North Bangalore)
      AnthillIQ Workspaces, 44/2A, Kodigehalli gate, Sahakarnagar post, Hebbal, Bengaluru, Karnataka 560092
 
-2. All locations are fully operational and offer:
-   - Private Offices
-   - Dedicated Desks
-   - Coworking Spaces
-   - Meeting Rooms
-   - Event Spaces
+2. Our Services (available at all locations):
+   - Private Offices: Dedicated spaces for teams
+   - Dedicated Desks: Fixed workstations in shared environment
+   - Coworking Spaces: Flexible hot desks
+   - Meeting Rooms: Professional meeting spaces
+   - Event Spaces: Venues for corporate events
+   - Training Rooms: Equipped for workshops
 
-3. Our services are available at all locations:
+3. Premium Amenities:
    - 24/7 Access
    - High-speed Internet
    - Meeting Room Credits
@@ -58,20 +64,36 @@ Key Information:
    - Mail & Package Handling
    - Housekeeping
    - Unlimited Tea/Coffee
+   - Community Events
+   - Business Address Services
 
-4. For pricing and availability:
-   - Varies by location and service type
-   - Customized packages available
-   - Contact us for current offers
+4. Pricing Overview:
+   - Private Offices: From ₹12,000 per seat/month
+   - Dedicated Desks: From ₹8,000 per seat/month
+   - Coworking Space: From ₹6,000 per seat/month
+   - Meeting Rooms: From ₹800 per hour
+   - Day Pass: From ₹500 per day
 
-Guidelines:
-1. Be friendly and professional
-2. All locations are fully operational
-3. Encourage visitors to schedule tours
-4. Provide location-specific details when asked
-5. Direct pricing queries to our team
-6. Highlight amenities and benefits
-7. Focus on convenience and flexibility"""
+Contact Information:
+- Phone: 9119739119
+- Email: connect@anthilliq.com
+- Website: www.anthilliq.com
+
+Guidelines for Responses:
+1. Be friendly, professional, and enthusiastic
+2. Provide specific, accurate information
+3. Encourage workspace visits and tours
+4. Highlight relevant amenities for each query
+5. Mention nearby landmarks when discussing locations
+6. Emphasize community and networking opportunities
+7. Always offer to provide more specific information
+
+Remember:
+1. All locations are fully operational
+2. Each location has its unique advantages
+3. Flexible packages are available
+4. Community is a key focus
+5. We cater to individuals, startups, and enterprises"""
 
 LOCATIONS = """Anthill IQ has four locations in Bangalore:
 1. Cunningham Road (Central Bangalore)
@@ -181,7 +203,9 @@ class handler(BaseHTTPRequestHandler):
             # SPECIAL CASE: Direct handling for location queries
             message_lower = message.lower()
             location_keywords = ['location', 'where', 'branch', 'branches', 'centers', 'places', 'areas']
-            if any(word in message_lower for word in location_keywords):
+            
+            # Only trigger location response if it's specifically asking about locations
+            if any(word in message_lower for word in location_keywords) and not any(word in message_lower for word in ['meaning', 'what is', 'about anthill', 'pricing', 'cost']):
                 location_response = get_location_response()
                 
                 result = {
@@ -195,10 +219,66 @@ class handler(BaseHTTPRequestHandler):
             
             # SPECIAL CASE: Direct handling for Hebbal branch queries
             if 'hebbal' in message_lower:
-                hebbal_response = "Our Hebbal branch is now fully operational in North Bangalore. This location offers all our services including private offices, dedicated desks, coworking spaces, and meeting rooms. The branch is ready for immediate bookings and tours. Would you like to know more about our services or schedule a visit to our Hebbal branch?"
+                hebbal_response = """Our Hebbal branch is located at:
+
+AnthillIQ Workspaces, 44/2A, Kodigehalli gate, Sahakarnagar post, Hebbal, Bengaluru, Karnataka 560092
+
+This location is fully operational and offers all our premium services including:
+- Private Offices
+- Dedicated Desks
+- Coworking Spaces
+- Meeting Rooms
+- Event Spaces
+
+Would you like to know more about our services or schedule a visit to our Hebbal branch?"""
                 
                 result = {
                     "response": hebbal_response,
+                    "source": "direct_handler",
+                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                }
+                
+                self._send_json_response(200, result)
+                return
+                
+            # Add specific handling for "meaning of Anthill IQ" query
+            if 'meaning' in message_lower and 'anthill' in message_lower:
+                meaning_response = """Anthill IQ represents innovation and community in the coworking space industry. The name "Anthill" symbolizes a collaborative and industrious community working together, while "IQ" represents intelligence and smart workspace solutions.
+
+We are Bangalore's premium coworking space provider, offering intelligent workspace solutions that foster productivity, creativity, and community. Our spaces are designed to create an ecosystem where professionals, startups, and enterprises can thrive together.
+
+Would you like to know more about our services or locations?"""
+                
+                result = {
+                    "response": meaning_response,
+                    "source": "direct_handler",
+                    "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                }
+                
+                self._send_json_response(200, result)
+                return
+                
+            # Add specific handling for pricing queries
+            if any(word in message_lower for word in ['price', 'pricing', 'cost', 'rate', 'fee']):
+                pricing_response = """Our pricing varies based on your specific requirements and location preference. Here's a general overview:
+
+1. Private Offices: Starting from ₹12,000 per seat/month
+2. Dedicated Desks: Starting from ₹8,000 per seat/month
+3. Coworking Space: Starting from ₹6,000 per seat/month
+4. Meeting Rooms: Starting from ₹800 per hour
+5. Day Pass: Starting from ₹500 per day
+
+All plans include:
+- High-speed internet
+- Unlimited tea/coffee
+- Access to common areas
+- Basic printing credits
+- Meeting room credits (varies by plan)
+
+Would you like to know specific pricing for any location or would you prefer to schedule a visit to discuss customized packages?"""
+                
+                result = {
+                    "response": pricing_response,
                     "source": "direct_handler",
                     "session_id": session_id or f"session_{datetime.now().strftime('%Y%m%d%H%M%S')}"
                 }
